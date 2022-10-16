@@ -26,7 +26,7 @@
             </span>
             <span class="text">Generate Sample</span>
         </button>
-        <button class="sample-doc" v-for="document in sampleDocuments" :key="document.id">
+        <button class="sample-doc" v-for="document in sampleDocuments" :key="document.id" @click="loadDoc(document.id)">
             <span class="material-symbols-outlined">
                 description
             </span>
@@ -55,7 +55,7 @@
 </script>
 
 <script sample-documents>
-
+import PSPDFKit from "pspdfkit";
 let id = 1
 
 export default {
@@ -82,6 +82,17 @@ export default {
         },
         clearSample() {
             this.sampleDocuments.splice(document)
+        },
+        loadDoc(docID) {
+            PSPDFKit.unload(".pdf-container");
+            let docName = 'http://localhost:5173/docs/' + docID + '.pdf'
+            console.log("Loading document at", docName)
+            return PSPDFKit.load({
+                // access the pdfFile from props
+                document: docName,
+                container: ".pdf-container",
+                disableWebAssemblyStreaming: true,
+            });
         }
     }
 }
