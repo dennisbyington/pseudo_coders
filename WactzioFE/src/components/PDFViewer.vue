@@ -5,7 +5,7 @@
                 keyboard_arrow_left
             </span>
         </button>
-        <h2>Document ?</h2>
+        <h2>{{getFileName()}}</h2>
         <button class="next-button">
             <span class="material-symbols-outlined" @click="nextTest">
                 keyboard_arrow_right
@@ -45,7 +45,15 @@ export default {
     },
     nextTest() {
       this.pdfFile = "http://localhost:5173/next.pdf"
+    },
+    /**
+     * Currently removes the "http://localhost:5173/",
+     * will need to change later for different URLS (FIXME)
+     */
+    getFileName() {
+      return this.pdfFile.substr(22,)
     }
+
   },
 };
 </script>
