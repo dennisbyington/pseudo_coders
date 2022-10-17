@@ -105,8 +105,10 @@ input[type="file"] {
     }
 }
 h2 {
-    display: inline;
+    display: inline-block;
     position: relative;
     top: -7px;
+    width: 250px;
+    max-width: 250px;
 }
 </style>
