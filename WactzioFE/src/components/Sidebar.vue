@@ -55,7 +55,7 @@
 </script>
 
 <script sample-documents>
-import PSPDFKit from "pspdfkit";
+import PSPDFKit from 'pspdfkit';
 let id = 1
 
 export default {
@@ -84,10 +84,10 @@ export default {
             this.sampleDocuments.splice(document)
         },
         loadDoc(docID) {
-            PSPDFKit.unload(".pdf-container");
             let docName = 'http://localhost:5173/docs/' + docID + '.pdf'
+            PSPDFKit.unload(".pdf-container");
             console.log("Loading document at", docName)
-            return PSPDFKit.load({
+            PSPDFKit.load({
                 // access the pdfFile from props
                 document: docName,
                 container: ".pdf-container",
@@ -96,7 +96,6 @@ export default {
         }
     }
 }
-
 </script>
 
 <style lang="scss" scoped>

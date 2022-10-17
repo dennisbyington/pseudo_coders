@@ -1,9 +1,16 @@
 <template>
     <div id="pspdf">
-        <label for="file-upload" class="custom-file-upload">
-        Open PDF
-        </label>
-        <input id="file-upload" type="file" @change="openDocument" class="btn" />
+        <button class="prev-button">
+            <span class="material-symbols-outlined">
+                keyboard_arrow_left
+            </span>
+        </button>
+        <h2>Document ?</h2>
+        <button class="next-button">
+            <span class="material-symbols-outlined">
+                keyboard_arrow_right
+            </span>
+        </button>
         <PSPDFKitContainer :pdfFile="pdfFile" @loaded="handleLoaded" />
     </div>
 </template>
@@ -14,7 +21,7 @@ import PSPDFKitContainer from "./PSPDFKitContainer.vue";
 export default {
   data() {
     return {
-      pdfFile: this.pdfFile || "/document.pdf",
+      pdfFile: this.pdfFile || "http://localhost:5173/document.pdf",
     };
   },
   /**
@@ -23,22 +30,10 @@ export default {
   components: {
     PSPDFKitContainer,
   },
-  /**
-   * Our component has two methods — one to check when the document is loaded, and the other to open the document.
-   */
   methods: {
-    handleLoaded(instance) {
+    handleLoaded(instance) { // Currently just for logging
       console.log("PSPDFKit has loaded: ", instance);
-      // Do something.
-    },
-
-    openDocument(event) {
-      // To access the Vue.js instance data properties, use `this` keyword.
-      if (this.pdfFile && this.pdfFile.startsWith('blob:')) {
-        window.URL.revokeObjectURL(this.pdfFile);
-      }
-      this.pdfFile = window.URL.createObjectURL(event.target.files[0]);
-    },
+    }
   },
 };
 </script>
@@ -71,5 +66,27 @@ input[type="file"] {
     font-size: 16px;
     font-weight: bold;
 }
+</style>
 
+<style lang="scss" scoped>
+.material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--light);
+    transition: 0.2 ease-out;
+}
+.prev-button, .next-button {
+    display: inline;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    margin: 1.5rem; 
+    background-color: var(--dark);
+    &:hover {
+        background-color: var(--dark-alt);
+    }
+}
+h2 {
+    display: inline;
+    position: relative;
+    top: -7px;
+}
 </style>
