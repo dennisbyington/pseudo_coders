@@ -1,13 +1,13 @@
 <template>
     <div id="pspdf">
         <button class="prev-button">
-            <span class="material-symbols-outlined">
+            <span class="material-symbols-outlined" @click="prevTest">
                 keyboard_arrow_left
             </span>
         </button>
         <h2>Document ?</h2>
         <button class="next-button">
-            <span class="material-symbols-outlined">
+            <span class="material-symbols-outlined" @click="nextTest">
                 keyboard_arrow_right
             </span>
         </button>
@@ -33,6 +33,18 @@ export default {
   methods: {
     handleLoaded(instance) { // Currently just for logging
       console.log("PSPDFKit has loaded: ", instance);
+    },
+
+    /**
+     * When pdfFile changes, PSPDFKitContainer will automatically load
+     * the new document. Testing - will need to provide the correct
+     * document based on the button and the current document. (FIXME)
+     */
+    prevTest() {
+      this.pdfFile = "http://localhost:5173/prev.pdf"
+    },
+    nextTest() {
+      this.pdfFile = "http://localhost:5173/next.pdf"
     }
   },
 };
