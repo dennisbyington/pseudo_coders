@@ -1,2 +1,5 @@
 # mac artifact
 .DS_Store
+
+# rubymine artifacts
+.idea/
