@@ -35,7 +35,7 @@
         //   .then(response => response.json())
         //   .then(data => (this.DocumentList = data));
       // axios.get("documents.json").then(response => (this.
-      axios.get("http://127.0.0.1:3000/documents").then(response => (this.
+      axios.get("http://127.0.0.1:3000/api/v0/documents").then(response => (this.
         DocumentList = response.data));
       }
     }
