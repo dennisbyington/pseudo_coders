@@ -64,6 +64,6 @@ export default {
 
 <style scoped>
 .pdf-container {
-  height: 80vh;
+  height: 75vh;
 }
 </style>
