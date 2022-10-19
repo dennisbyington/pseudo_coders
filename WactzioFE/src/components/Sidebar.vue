@@ -26,12 +26,12 @@
             </span>
             <span class="text">Generate Sample</span>
         </button>
-        <button class="sample-doc" v-for="document in sampleDocuments" :key="document.id" @click="loadDoc(document.id)">
+        <router-link class="sample-doc" to="/" v-for="document in sampleDocuments" :key="document.id" @click="loadDoc(document.id)">
             <span class="material-symbols-outlined">
                 description
             </span>
             <span class="text">{{ document.text }} {{ document.id }}</span>
-        </button>
+        </router-link>
         <button class="clear-sample" @click="clearSample" >
             <span class="material-symbols-outlined">
                 close
@@ -45,7 +45,6 @@
 
 <script setup>
     import { ref } from 'vue'
-    import { computed } from "vue"
     import { useCurrentFileStore } from "../stores/currentFile"
 
     const is_expanded = ref(false)
@@ -58,7 +57,6 @@
 </script>
 
 <script sample-documents>
-import PSPDFKit from 'pspdfkit';
 let id = 1
 
 export default {
@@ -87,8 +85,9 @@ export default {
             this.sampleDocuments.splice(document)
         },
         loadDoc(docID) {
-            let docName = 'http://localhost:5173/docs/' + docID + '.pdf'
+            let docName = "http://localhost:5173/docs/" + docID + ".pdf"
             this.store.currentFile = docName
+            console.log("sidebar")
         }
     }
 }

@@ -28,7 +28,8 @@ import PSPDFKitContainer from "./PSPDFKitContainer.vue";
 export default {
   data() {
     return {
-      pdfFile: this.pdfFile || "http://localhost:5173/document.pdf",
+      pdfFile: this.currentFile || "http://localhost:5173/document.pdf",
+      //pdfFile: this.pdfFile || "http://localhost:5173/document.pdf",
     };
   },
   /**
@@ -40,6 +41,7 @@ export default {
   watch: {
     currentFile(val) { //FIXME PINIA
       if (val) {
+        console.log("update")
         this.pdfFile = this.currentFile
       }
     },
