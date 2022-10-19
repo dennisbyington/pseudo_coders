@@ -86,8 +86,8 @@ export default {
         },
         loadDoc(docID) {
             let docName = "http://localhost:5173/docs/" + docID + ".pdf"
+            console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
             this.store.currentFile = docName
-            console.log("sidebar")
         }
     }
 }

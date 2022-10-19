@@ -29,7 +29,6 @@ export default {
   data() {
     return {
       pdfFile: this.currentFile || "http://localhost:5173/document.pdf",
-      //pdfFile: this.pdfFile || "http://localhost:5173/document.pdf",
     };
   },
   /**
@@ -41,14 +40,16 @@ export default {
   watch: {
     currentFile(val) { //FIXME PINIA
       if (val) {
-        console.log("update")
+        console.log("PDFViewer.vue: this.currentFile (which holds this.store.currentFile) has changed.")
+        console.log("PDFViewer.vue: Setting this.pdfFile to",this.currentFile)
         this.pdfFile = this.currentFile
       }
     },
   },
   methods: {
     handleLoaded(instance) { // Currently just for logging
-      console.log("PSPDFKit has loaded: ", instance);
+      console.log("PDFViewer.vue: PSPDFKit has been initialized, loading", this.pdfFile)
+      //console.log("PSPDFKit has loaded: ", instance);
     },
 
     /**
