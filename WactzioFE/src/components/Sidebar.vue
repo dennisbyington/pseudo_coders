@@ -45,6 +45,8 @@
 
 <script setup>
     import { ref } from 'vue'
+    import { computed } from "vue"
+    import { useCurrentFileStore } from "../stores/currentFile"
 
     const is_expanded = ref(false)
 
@@ -52,6 +54,7 @@
         is_expanded.value = !is_expanded.value
     }
 
+    const store = useCurrentFileStore()
 </script>
 
 <script sample-documents>
@@ -85,14 +88,7 @@ export default {
         },
         loadDoc(docID) {
             let docName = 'http://localhost:5173/docs/' + docID + '.pdf'
-            PSPDFKit.unload(".pdf-container");
-            console.log("Loading document at", docName)
-            PSPDFKit.load({
-                // access the pdfFile from props
-                document: docName,
-                container: ".pdf-container",
-                disableWebAssemblyStreaming: true,
-            });
+            this.store.currentFile = docName
         }
     }
 }

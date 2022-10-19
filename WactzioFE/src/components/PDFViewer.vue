@@ -15,6 +15,13 @@
     </div>
 </template>
 
+<script setup>
+  import { computed } from "vue";
+  import { useCurrentFileStore } from "../stores/currentFile";
+  const store = useCurrentFileStore();
+  const currentFile = computed(() => store.currentFile )
+</script>
+
 <script>
 import PSPDFKitContainer from "./PSPDFKitContainer.vue";
 
@@ -30,6 +37,13 @@ export default {
   components: {
     PSPDFKitContainer,
   },
+  watch: {
+    currentFile(val) { //FIXME PINIA
+      if (val) {
+        this.pdfFile = this.currentFile
+      }
+    },
+  },
   methods: {
     handleLoaded(instance) { // Currently just for logging
       console.log("PSPDFKit has loaded: ", instance);
@@ -41,10 +55,10 @@ export default {
      * document based on the button and the current document. (FIXME)
      */
     prevTest() {
-      this.pdfFile = "http://localhost:5173/prev.pdf"
+      this.store.currentFile = "http://localhost:5173/prev.pdf"
     },
     nextTest() {
-      this.pdfFile = "http://localhost:5173/next.pdf"
+      this.store.currentFile = "http://localhost:5173/next.pdf"
     },
     /**
      * Currently removes the "http://localhost:5173/",
