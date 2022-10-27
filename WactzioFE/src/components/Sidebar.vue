@@ -26,12 +26,12 @@
             </span>
             <span class="text">Generate Sample</span>
         </button>
-        <button class="sample-doc" v-for="document in sampleDocuments" :key="document.id">
+        <router-link class="sample-doc" to="/" v-for="document in sampleDocuments" :key="document.id" @click="loadDoc(document.id)">
             <span class="material-symbols-outlined">
                 description
             </span>
             <span class="text">{{ document.text }} {{ document.id }}</span>
-        </button>
+        </router-link>
         <button class="clear-sample" @click="clearSample" >
             <span class="material-symbols-outlined">
                 close
@@ -45,6 +45,7 @@
 
 <script setup>
     import { ref } from 'vue'
+    import { useCurrentFileStore } from "../stores/currentFile"
 
     const is_expanded = ref(false)
 
@@ -52,10 +53,10 @@
         is_expanded.value = !is_expanded.value
     }
 
+    const store = useCurrentFileStore()
 </script>
 
 <script sample-documents>
-
 let id = 1
 
 export default {
@@ -82,10 +83,14 @@ export default {
         },
         clearSample() {
             this.sampleDocuments.splice(document)
+        },
+        loadDoc(docID) {
+            let docName = "http://localhost:5173/docs/" + docID + ".pdf"
+            console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
+            this.store.currentFile = docName
         }
     }
 }
-
 </script>
 
 <style lang="scss" scoped>
