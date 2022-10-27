@@ -3,3 +3,9 @@
 
 # rubymine artifacts
 .idea/
+
+# temp docs
+WactzioFE/public/docs/
+WactzioFE/public/document.pdf
+WactzioFE/public/next.pdf
+WactzioFE/public/prev.pdf
