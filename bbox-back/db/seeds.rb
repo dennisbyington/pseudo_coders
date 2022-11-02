@@ -5,3 +5,17 @@
 #
 #   movies = Movie.create([{ name: "Star Wars" }, { name: "Lord of the Rings" }])
 #   Character.create(name: "Luke", movie: movies.first)
+
+Company.destroy_all
+
+Company.create!([{
+  name: "Seed Company 1"
+},
+{
+  name: "Seed Company 2"
+},
+{
+  name: "Seed Company 3"
+}])
+
+p "Created #{Company.count} companies"
