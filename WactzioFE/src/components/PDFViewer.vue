@@ -31,10 +31,8 @@ export default {
       pdfFile: "-", // "-" used as a placeholder document name (doesn't actually load a document)
     }
   },
-  mounted() { // needed when first loading a PDF file (otherwise watch statement below won't act in time)
-    if (this.store.currentFile) { // needs to have a file to load
-      this.loadPSPDFKit()
-    }
+  mounted() {
+    this.loadDoc()
   },
   beforeUnmount() {
     PSPDFKit.unload(".pdf-container");
@@ -42,9 +40,7 @@ export default {
   watch: {
     currentFileWatch(val) {
       if (val) {
-        console.log("PDFViewer.vue: this.currentFile (which holds this.store.currentFile) has changed.")
-        console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
-        this.loadPSPDFKit()
+        this.loadDoc()
       }
     },
   },
@@ -64,6 +60,13 @@ export default {
     nextDoc() {
       console.log("RIGHT")
       this.store.currentIndex++
+    },
+    loadDoc() {
+      if (this.store.currentFile) { // needs to have a file to load
+        console.log("PDFViewer.vue: this.currentFile (which holds this.store.currentFile) has changed.")
+        console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
+        this.loadPSPDFKit()
+      }
     },
     /**
      * Gets a substring of everything after the last "/",
