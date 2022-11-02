@@ -26,11 +26,11 @@
             </span>
             <span class="text">Generate Sample</span>
         </button>
-        <router-link class="sample-doc" to="/" v-for="document in sampleDocuments" :key="document.id" @click="loadDoc(document.id)">
+        <router-link class="sample-doc" to="/" v-for="document in sampleDocuments" :key="document.id" @click="setDoc(document.id)">
             <span class="material-symbols-outlined">
                 description
             </span>
-            <span class="text">{{ document.text }} {{ document.id }}</span>
+            <span class="text">{{ formatFileName(this.dummyArray[document.id-1]) }}</span>
         </router-link>
         <button class="clear-sample" @click="clearSample" >
             <span class="material-symbols-outlined">
@@ -44,8 +44,10 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue'
+    import { ref } from "vue"
+    import { computed } from "vue"
     import { useCurrentFileStore } from "../stores/currentFile"
+    import { useCurrentIndexStore } from "../stores/currentIndex"
 
     const is_expanded = ref(false)
 
@@ -54,6 +56,18 @@
     }
 
     const store = useCurrentFileStore()
+    const indexStore = useCurrentIndexStore()
+    const currentIndexWatch = computed(() => indexStore.currentIndex ) // can't directly watch a store variable, so use computed
+
+    // FIXME - Hardcoded array of document URLs, would need to get from backend
+    // instead (and probably move declaration somewhere else)
+    let dummyArray = [
+        "http://localhost:5173/docs/armadillo.pdf", "http://localhost:5173/docs/cat.pdf", "http://localhost:5173/docs/fish.pdf",
+        "http://localhost:5173/docs/word.pdf", "http://localhost:5173/docs/understanding.pdf", "http://localhost:5173/docs/a.pdf",
+        "http://localhost:5173/docs/4901.pdf", "http://localhost:5173/docs/hello world.pdf", "http://localhost:5173/docs/1-2-3.pdf",
+        "http://localhost:5173/docs/loooooooooooooooong.pdf"
+    ]
+    
 </script>
 
 <script sample-documents>
@@ -68,15 +82,24 @@ export default {
             ]
         }
     },
+    watch: {
+        currentIndexWatch(val) { // Store variable currentIndex has changed - load the document from that index in the document array
+            console.log("Sidebar.vue has index",val,"- Loading document",val+1)
+            let docName = this.dummyArray[this.indexStore.currentIndex] // FIXME - currently uses dummy array
+            console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
+            this.store.currentFile = docName
+        },
+    },
     methods: {
         addSampleDocument() {
-            this.sampleDocuments.push({ id: id++, text: this.newSampleDocument })
+            this.sampleDocuments.push({ id: id++, text: this.newSampleDocument }) // FIXME? Text not currently used - change or remove?
         },
-        generateSample() {
+        generateSample() { // FIXME? Second run onwards will cause errors because indexes 11+ do not exist in dummyArray
             var i = [1,2,3,4,5,6,7,8,9,10];
             i.forEach(number => {
                 this.addSampleDocument()
             });
+            this.indexStore.arrayLength = this.dummyArray.length // FIXME - currently uses dummy array
         },
         removeSampleDocument(document) {
             this.sampleDocuments = this.sampleDocuments.filter((t) => t !== document)
@@ -84,10 +107,11 @@ export default {
         clearSample() {
             this.sampleDocuments.splice(document)
         },
-        loadDoc(docID) {
-            let docName = "http://localhost:5173/docs/" + docID + ".pdf"
-            console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
-            this.store.currentFile = docName
+        setDoc(docID){ // Sets store variables (arrayLength disables "next" button, currentIndex is tracked - changes trigger loadDoc())
+            this.indexStore.currentIndex = docID-1               // might go from document.id (docID) to currentIndex differently later on
+        },
+        formatFileName(myFile) { // removes URL portion: "http://localhost:5173/docs/SAMPLE.pdf" --> "SAMPLE.pdf"
+             return myFile.substring(myFile.lastIndexOf("/")+1,)
         }
     }
 }

@@ -1,12 +1,12 @@
-import { defineStore } from "pinia";
+import { defineStore } from "pinia"
 
 export const useCurrentFileStore = defineStore("currentFile", {
     state: () => {
-        return { currentFile: "" };
+        return { currentFile: "" }
     },
     actions: {
         set(val) {
-            this.currentFile = val;
+            this.currentFile = val
         },
     },
 });

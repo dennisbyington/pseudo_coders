@@ -1,13 +1,13 @@
 <template>
     <div id="pspdf">
-        <button class="prev-button">
-            <span class="material-symbols-outlined" @click="prevTest">
+        <button class="prev-button" @click="prevDoc" :disabled="isMinIndex()">
+            <span class="material-symbols-outlined">
                 keyboard_arrow_left
             </span>
         </button>
         <h2>{{getFileName()}}</h2>
-        <button class="next-button">
-            <span class="material-symbols-outlined" @click="nextTest">
+        <button class="next-button" @click="nextDoc" :disabled="isMaxIndex()">
+            <span class="material-symbols-outlined">
                 keyboard_arrow_right
             </span>
         </button>
@@ -17,19 +17,21 @@
 
 <script setup>
   import { computed } from "vue";
-  import { useCurrentFileStore } from "../stores/currentFile";
-  const store = useCurrentFileStore();
-  const currentFile = computed(() => store.currentFile )
+  import { useCurrentFileStore } from "../stores/currentFile"
+  import { useCurrentIndexStore } from "../stores/currentIndex"
+  const store = useCurrentFileStore()
+  const indexStore = useCurrentIndexStore()
+  const currentFileWatch = computed(() => store.currentFile ) // can't directly watch a store variable, so use computed
 </script>
 
 <script>
-import PSPDFKitContainer from "./PSPDFKitContainer.vue";
+import PSPDFKitContainer from "./PSPDFKitContainer.vue"
 
 export default {
   data() {
     return {
-      pdfFile: this.currentFile || "http://localhost:5173/document.pdf",
-    };
+      pdfFile: "-", // "-" used as a placeholder document name (doesn't actually load a document)
+    }
   },
   /**
    * Render the `PSPDFKitContainer` component.
@@ -37,38 +39,49 @@ export default {
   components: {
     PSPDFKitContainer,
   },
+  mounted() { // needed when first loading a PDF file (otherwise watch statement below won't act in time)
+    this.pdfFile = this.store.currentFile
+  },
   watch: {
-    currentFile(val) { //FIXME PINIA
+    currentFileWatch(val) {
       if (val) {
         console.log("PDFViewer.vue: this.currentFile (which holds this.store.currentFile) has changed.")
-        console.log("PDFViewer.vue: Setting this.pdfFile to",this.currentFile)
-        this.pdfFile = this.currentFile
+        console.log("PDFViewer.vue: Setting this.pdfFile to",this.store.currentFile)
+        this.pdfFile = this.store.currentFile
       }
     },
   },
   methods: {
     handleLoaded(instance) { // Currently just for logging
       console.log("PDFViewer.vue: PSPDFKit has been initialized, loading", this.pdfFile)
-      //console.log("PSPDFKit has loaded: ", instance);
     },
-
-    /**
-     * When pdfFile changes, PSPDFKitContainer will automatically load
-     * the new document. Testing - will need to provide the correct
-     * document based on the button and the current document. (FIXME)
-     */
-    prevTest() {
-      this.store.currentFile = "http://localhost:5173/prev.pdf"
+    prevDoc() {
+      console.log("LEFT")
+      this.indexStore.currentIndex--
     },
-    nextTest() {
-      this.store.currentFile = "http://localhost:5173/next.pdf"
+    nextDoc() {
+      console.log("RIGHT")
+      this.indexStore.currentIndex++
     },
     /**
-     * Currently removes the "http://localhost:5173/",
-     * will need to change later for different URLS (FIXME)
+     * Gets a substring of everything after the last "/",
+     * might need to change later for different URLS (FIXME)
      */
     getFileName() {
-      return this.pdfFile.substr(22,)
+      //return this.pdfFile.substr(22,) // removes "http://localhost:5173/"
+      return this.pdfFile.substring(this.pdfFile.lastIndexOf("/")+1,)
+    },
+    isMinIndex() { // determines whether to disable previous button (can't go further back)
+      if (this.indexStore.currentIndex <= 0) {
+        return true
+      }
+      return false
+    },
+    isMaxIndex() { // determines whether to disable next button (can't go further forward)
+      if (this.indexStore.currentIndex >= this.indexStore.arrayLength - 1) {
+        return true
+      }
+      return false
     }
 
   },
@@ -121,6 +134,10 @@ input[type="file"] {
         background-color: var(--dark-alt);
     }
 }
+.prev-button:disabled, .next-button:disabled {
+    background-color: gray;
+}
+
 h2 {
     display: inline-block;
     position: relative;

@@ -7,5 +7,5 @@
 </template>
 
 <script setup>
-import pdfviewer from '../components/PDFViewer.vue'
+import pdfviewer from "../components/PDFViewer.vue"
 </script>

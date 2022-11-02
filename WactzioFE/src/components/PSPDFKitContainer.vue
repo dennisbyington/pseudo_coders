@@ -9,7 +9,7 @@ import PSPDFKit from "pspdfkit";
  * PSPDFKit for Web example component.
  */
 export default {
-  name: 'PSPDFKit',
+  name: "PSPDFKit",
   /**
 	 * The component receives `pdfFile` as a prop, which is type of `String` and is required.
 	 */
@@ -20,14 +20,6 @@ export default {
     },
   },
   /**
-	* We wait until the template has been rendered to load the document into the library.
-	*/
-  mounted() {
-    this.loadPSPDFKit().then((instance) => {
-      this.$emit("loaded", instance);
-    });
-  },
-  /**
 	 * We watch for `pdfFile` prop changes and trigger unloading and loading when there's a new document to load.
 	 */
   watch: {
@@ -35,7 +27,7 @@ export default {
       if (val) {
         console.log("PSPDFKitContainer.vue: this.pdfFile has changed.")
         console.log("PSPDFKitContainer.vue: Loading PDF with name",this.pdfFile)
-        this.loadPSPDFKit();
+        this.loadPSPDFKit()
       }
     },
   },
@@ -44,7 +36,7 @@ export default {
 	 */
   methods: {
     async loadPSPDFKit() {
-      PSPDFKit.unload(".pdf-container");
+      PSPDFKit.unload(".pdf-container")
       return PSPDFKit.load({
         // access the pdfFile from props
         document: this.pdfFile,
@@ -58,7 +50,7 @@ export default {
 	 * Clean up when the component is unmounted so it's ready to load another document (not needed in this example).
 	 */
   beforeUnmount() {
-    PSPDFKit.unload(".pdf-container");
+    PSPDFKit.unload(".pdf-container")
   },
 };
 </script>
