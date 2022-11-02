@@ -49,7 +49,7 @@ export default {
     },
   },
   methods: {
-    loadPSPDFKit() {
+    async loadPSPDFKit() {
       PSPDFKit.unload(".pdf-container")
       return PSPDFKit.load({
         document: this.store.currentFile,
