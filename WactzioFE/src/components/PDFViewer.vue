@@ -17,10 +17,8 @@
 
 <script setup>
   import { computed } from "vue";
-  import { useCurrentFileStore } from "../stores/currentFile"
-  import { useCurrentIndexStore } from "../stores/currentIndex"
-  const store = useCurrentFileStore()
-  const indexStore = useCurrentIndexStore()
+  import { useFileMgrStore } from "../stores/fileMgr"
+  const store = useFileMgrStore()
   const currentFileWatch = computed(() => store.currentFile ) // can't directly watch a store variable, so use computed
 </script>
 
@@ -57,11 +55,11 @@ export default {
     },
     prevDoc() {
       console.log("LEFT")
-      this.indexStore.currentIndex--
+      this.store.currentIndex--
     },
     nextDoc() {
       console.log("RIGHT")
-      this.indexStore.currentIndex++
+      this.store.currentIndex++
     },
     /**
      * Gets a substring of everything after the last "/",
@@ -72,13 +70,13 @@ export default {
       return this.pdfFile.substring(this.pdfFile.lastIndexOf("/")+1,)
     },
     isMinIndex() { // determines whether to disable previous button (can't go further back)
-      if (this.indexStore.currentIndex <= 0) {
+      if (this.store.currentIndex <= 0) {
         return true
       }
       return false
     },
     isMaxIndex() { // determines whether to disable next button (can't go further forward)
-      if (this.indexStore.currentIndex >= this.indexStore.arrayLength - 1) {
+      if (this.store.currentIndex >= this.store.arrayLength - 1) {
         return true
       }
       return false

@@ -46,18 +46,16 @@
 <script setup>
     import { ref } from "vue"
     import { computed } from "vue"
-    import { useCurrentFileStore } from "../stores/currentFile"
-    import { useCurrentIndexStore } from "../stores/currentIndex"
-
+    import { useFileMgrStore } from "../stores/fileMgr"
+  
     const is_expanded = ref(false)
 
     const ToggleMenu = () => {
         is_expanded.value = !is_expanded.value
     }
 
-    const store = useCurrentFileStore()
-    const indexStore = useCurrentIndexStore()
-    const currentIndexWatch = computed(() => indexStore.currentIndex ) // can't directly watch a store variable, so use computed
+    const store = useFileMgrStore()
+    const currentIndexWatch = computed(() => store.currentIndex ) // can't directly watch a store variable, so use computed
 
     // FIXME - Hardcoded array of document URLs, would need to get from backend
     // instead (and probably move declaration somewhere else)
@@ -85,7 +83,7 @@ export default {
     watch: {
         currentIndexWatch(val) { // Store variable currentIndex has changed - load the document from that index in the document array
             console.log("Sidebar.vue has index",val,"- Loading document",val+1)
-            let docName = this.dummyArray[this.indexStore.currentIndex] // FIXME - currently uses dummy array
+            let docName = this.dummyArray[this.store.currentIndex] // FIXME - currently uses dummy array
             console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
             this.store.currentFile = docName
         },
@@ -99,7 +97,6 @@ export default {
             i.forEach(number => {
                 this.addSampleDocument()
             });
-            this.indexStore.arrayLength = this.dummyArray.length // FIXME - currently uses dummy array
         },
         removeSampleDocument(document) {
             this.sampleDocuments = this.sampleDocuments.filter((t) => t !== document)
@@ -108,7 +105,8 @@ export default {
             this.sampleDocuments.splice(document)
         },
         setDoc(docID){ // Sets store variables (arrayLength disables "next" button, currentIndex is tracked - changes trigger loadDoc())
-            this.indexStore.currentIndex = docID-1               // might go from document.id (docID) to currentIndex differently later on
+            this.store.arrayLength = this.dummyArray.length // FIXME - currently uses dummy array
+            this.store.currentIndex = docID-1               // might go from document.id (docID) to currentIndex differently later on
         },
         formatFileName(myFile) { // removes URL portion: "http://localhost:5173/docs/SAMPLE.pdf" --> "SAMPLE.pdf"
              return myFile.substring(myFile.lastIndexOf("/")+1,)
