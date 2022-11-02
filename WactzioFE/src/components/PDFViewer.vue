@@ -11,11 +11,12 @@
                 keyboard_arrow_right
             </span>
         </button>
-        <PSPDFKitContainer :pdfFile="pdfFile" @loaded="handleLoaded" />
+        <div class="pdf-container" @loaded="handleLoaded"></div>
     </div>
 </template>
 
 <script setup>
+  import PSPDFKit from "pspdfkit";
   import { computed } from "vue";
   import { useFileMgrStore } from "../stores/fileMgr"
   const store = useFileMgrStore()
@@ -23,19 +24,12 @@
 </script>
 
 <script>
-import PSPDFKitContainer from "./PSPDFKitContainer.vue"
 
 export default {
   data() {
     return {
       pdfFile: "-", // "-" used as a placeholder document name (doesn't actually load a document)
     }
-  },
-  /**
-   * Render the `PSPDFKitContainer` component.
-   */
-  components: {
-    PSPDFKitContainer,
   },
   mounted() { // needed when first loading a PDF file (otherwise watch statement below won't act in time)
     this.pdfFile = this.store.currentFile
@@ -44,12 +38,21 @@ export default {
     currentFileWatch(val) {
       if (val) {
         console.log("PDFViewer.vue: this.currentFile (which holds this.store.currentFile) has changed.")
-        console.log("PDFViewer.vue: Setting this.pdfFile to",this.store.currentFile)
-        this.pdfFile = this.store.currentFile
+        console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
+        this.loadPSPDFKit()
       }
     },
   },
   methods: {
+    async loadPSPDFKit() {
+      PSPDFKit.unload(".pdf-container")
+      return PSPDFKit.load({
+        // access the pdfFile from props
+        document: this.store.currentFile,
+        container: ".pdf-container",
+        disableWebAssemblyStreaming: true,
+      });
+    },
     handleLoaded(instance) { // Currently just for logging
       console.log("PDFViewer.vue: PSPDFKit has been initialized, loading", this.pdfFile)
     },
@@ -67,7 +70,7 @@ export default {
      */
     getFileName() {
       //return this.pdfFile.substr(22,) // removes "http://localhost:5173/"
-      return this.pdfFile.substring(this.pdfFile.lastIndexOf("/")+1,)
+      return this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,)
     },
     isMinIndex() { // determines whether to disable previous button (can't go further back)
       if (this.store.currentIndex <= 0) {
@@ -117,6 +120,9 @@ input[type="file"] {
 </style>
 
 <style lang="scss" scoped>
+.pdf-container {
+  height: 75vh;
+}
 .material-symbols-outlined {
     font-size: 2rem;
     color: var(--light);
