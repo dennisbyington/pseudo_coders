@@ -11,7 +11,7 @@
                 keyboard_arrow_right
             </span>
         </button>
-        <div class="pdf-container" @loaded="handleLoaded"></div>
+        <div class="pdf-container"></div>
     </div>
 </template>
 
@@ -32,7 +32,12 @@ export default {
     }
   },
   mounted() { // needed when first loading a PDF file (otherwise watch statement below won't act in time)
-    this.pdfFile = this.store.currentFile
+    if (this.store.currentFile) { // needs to have a file to load
+      this.loadPSPDFKit()
+    }
+  },
+  beforeUnmount() {
+    PSPDFKit.unload(".pdf-container");
   },
   watch: {
     currentFileWatch(val) {
@@ -44,17 +49,13 @@ export default {
     },
   },
   methods: {
-    async loadPSPDFKit() {
+    loadPSPDFKit() {
       PSPDFKit.unload(".pdf-container")
       return PSPDFKit.load({
-        // access the pdfFile from props
         document: this.store.currentFile,
         container: ".pdf-container",
         disableWebAssemblyStreaming: true,
       });
-    },
-    handleLoaded(instance) { // Currently just for logging
-      console.log("PDFViewer.vue: PSPDFKit has been initialized, loading", this.pdfFile)
     },
     prevDoc() {
       console.log("LEFT")
