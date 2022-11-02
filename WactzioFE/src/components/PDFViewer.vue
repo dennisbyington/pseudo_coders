@@ -26,19 +26,14 @@
 <script>
 
 export default {
-  data() {
-    return {
-      pdfFile: "-", // "-" used as a placeholder document name (doesn't actually load a document)
-    }
-  },
-  mounted() {
+  mounted() { // used for loading documents accessed through about page
     this.loadDoc()
   },
   beforeUnmount() {
     PSPDFKit.unload(".pdf-container");
   },
   watch: {
-    currentFileWatch(val) {
+    currentFileWatch(val) { // used for loading documents accessed through home page
       if (val) {
         this.loadDoc()
       }
@@ -54,26 +49,18 @@ export default {
       });
     },
     prevDoc() {
-      console.log("LEFT")
       this.store.currentIndex--
     },
     nextDoc() {
-      console.log("RIGHT")
       this.store.currentIndex++
     },
     loadDoc() {
       if (this.store.currentFile) { // needs to have a file to load
-        console.log("PDFViewer.vue: this.currentFile (which holds this.store.currentFile) has changed.")
         console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
         this.loadPSPDFKit()
       }
     },
-    /**
-     * Gets a substring of everything after the last "/",
-     * might need to change later for different URLS (FIXME)
-     */
-    getFileName() {
-      //return this.pdfFile.substr(22,) // removes "http://localhost:5173/"
+    getFileName() { // Gets a substring of everything after the last "/", might need to change later for different URLS (FIXME)
       return this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,)
     },
     isMinIndex() { // determines whether to disable previous button (can't go further back)
