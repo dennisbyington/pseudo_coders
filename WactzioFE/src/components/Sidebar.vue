@@ -20,18 +20,24 @@
             </span>
             <span class="text">Home</span>
         </router-link>
+        <router-link to="/about" class="about-button">
+            <span class="material-symbols-outlined">
+                info
+            </span>
+            <span class="text">About</span>
+        </router-link>
         <button class="gen-sample" @click="generateSample" >
             <span class="material-symbols-outlined">
                 autorenew
             </span>
             <span class="text">Generate Sample</span>
         </button>
-        <router-link class="sample-doc" to="/" v-for="document in sampleDocuments" :key="document.id" @click="setDoc(document.id)">
+        <button class="sample-doc" v-for="document in sampleDocuments" :key="document.id" @click="setDoc(document.id)">
             <span class="material-symbols-outlined">
                 description
             </span>
-            <span class="text">{{ formatFileName(this.dummyArray[document.id-1]) }}</span>
-        </router-link>
+            <span class="text">{{ document.text }}</span>
+        </button>
         <button class="clear-sample" @click="clearSample" >
             <span class="material-symbols-outlined">
                 close
@@ -89,14 +95,14 @@ export default {
         },
     },
     methods: {
-        addSampleDocument() {
-            this.sampleDocuments.push({ id: id++, text: this.newSampleDocument }) // FIXME? Text not currently used - change or remove?
+        addSampleDocument(index, element) {
+            this.sampleDocuments.push({ id: index, text: element })
         },
-        generateSample() { // FIXME? Second run onwards will cause errors because indexes 11+ do not exist in dummyArray
-            var i = [1,2,3,4,5,6,7,8,9,10];
-            i.forEach(number => {
-                this.addSampleDocument()
-            });
+        generateSample() {
+            this.sampleDocuments.splice(document) // removes old sample for now (FIXME)
+            this.dummyArray.forEach((element, index) => {
+                this.addSampleDocument(index, this.formatFileName(element))
+            })
         },
         removeSampleDocument(document) {
             this.sampleDocuments = this.sampleDocuments.filter((t) => t !== document)
@@ -104,9 +110,12 @@ export default {
         clearSample() {
             this.sampleDocuments.splice(document)
         },
-        setDoc(docID){ // Sets store variables (arrayLength disables "next" button, currentIndex is tracked - changes trigger loadDoc())
+        async setDoc(docID){ // Sets store variables (arrayLength disables "next" button, currentIndex is tracked - changes trigger loadDoc())
+            if (this.$route.path !== "/") { // Need to redirect to main page, then change the index and file
+                await this.$router.push("/")
+            }
             this.store.arrayLength = this.dummyArray.length // FIXME - currently uses dummy array
-            this.store.currentIndex = docID-1               // might go from document.id (docID) to currentIndex differently later on
+            this.store.currentIndex = docID                 // might go from document.id (docID) to currentIndex differently later on
         },
         formatFileName(myFile) { // removes URL portion: "http://localhost:5173/docs/SAMPLE.pdf" --> "SAMPLE.pdf"
              return myFile.substring(myFile.lastIndexOf("/")+1,)
@@ -185,7 +194,7 @@ aside {
             color: var(--light);
             transition: 0.2 ease-out;
         }
-        .home-button, .gen-sample, .sample-doc, .clear-sample {
+        .home-button, .about-button, .gen-sample, .sample-doc, .clear-sample {
             display: flex;
             align-items: center;
             text-decoration: none;

@@ -26,11 +26,17 @@
 <script>
 
 export default {
-  mounted() { // used for loading documents accessed through about page
-    this.loadDoc()
+  mounted() { // currently just for logging
+    console.log("PDFViewer has mounted.")
   },
   beforeUnmount() {
-    PSPDFKit.unload(".pdf-container");
+    PSPDFKit.unload(".pdf-container")
+    /** Resets store variables to dummy values - otherwise loading a document, leaving main page to about page,
+     *  and clicking on the same document will not properly load it: store variables won't change, so the watch won't
+     *  trigger (FIXME?)
+     * */ 
+    this.store.currentFile = ""
+    this.store.currentIndex = -1
   },
   watch: {
     currentFileWatch(val) { // used for loading documents accessed through home page
@@ -42,11 +48,14 @@ export default {
   methods: {
     async loadPSPDFKit() {
       PSPDFKit.unload(".pdf-container")
+      // return statement present: in loadDoc(), put this.loadPSPDFKit().then(async (instance) => { annotation stuff })
+      // or remove return statement: in this function, put PSPDFKit.load(stuff).then(async (instance) => { annotation stuff})
       return PSPDFKit.load({
         document: this.store.currentFile,
         container: ".pdf-container",
         disableWebAssemblyStreaming: true,
-      });
+        //initialViewState: new PSPDFKit.ViewState({ readOnly: true }), // prevents editing annotations
+      })
     },
     prevDoc() {
       this.store.currentIndex--
@@ -57,11 +66,76 @@ export default {
     loadDoc() {
       if (this.store.currentFile) { // needs to have a file to load
         console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
-        this.loadPSPDFKit()
+        this.loadPSPDFKit().then(async (instance) => { // start of then   
+
+          // create annotations
+          // [1,2].forEach(async (item) => {
+          //   const annotation = new PSPDFKit.Annotations.RectangleAnnotation({
+          //       pageIndex: 0,
+          //       boundingBox: new PSPDFKit.Geometry.Rect({
+          //         left: 100*item,
+          //         top: 100*item,
+          //         width: 50,
+          //         height: 50,
+          //       }),
+          //       fillColor: PSPDFKit.Color.BLUE,
+          //       opacity: 0.5,
+          //       isEditable: false,
+          //   })
+          //   const [createdAnnotation] = await instance.create(annotation);
+          //   console.log(createdAnnotation.id); // => '01BS964AM5Z01J9MKBK64F22BQ'
+          // })
+ 
+          // import annotations
+          // instance.applyOperations([ // start of import annotations block
+          //   {
+          //     type: "applyInstantJson",
+          //     instantJson: {
+          //       annotations: [
+          //         {
+          //           bbox: [100, 150, 200, 75],
+          //           blendMode: "normal",
+          //           createdAt: "1970-01-01T00:00:00Z",
+          //           id: "01F73GJ4RPENTCMFSCJ5CSFT5G",
+          //           name: "01F73GJ4RPENTCMFSCJ5CSFT5G",
+          //           fillColor: "#2293FB",
+          //           opacity: 0.5,
+          //           pageIndex: 0,
+          //           strokeColor: "#2293FB",
+          //           strokeWidth: 5,
+          //           type: "pspdfkit/shape/rectangle",
+          //           updatedAt: "1970-01-01T00:00:00Z",
+          //           v: 1
+          //         },
+          //         {
+          //           bbox: [200, 250, 200, 75],
+          //           blendMode: "normal",
+          //           createdAt: "1970-01-01T00:00:00Z",
+          //           id: "01F73GJ4RPENTCMFSCJ5CSFT5H",
+          //           name: "01F73GJ4RPENTCMFSCJ5CSFT5H",
+          //           fillColor: "#2293FB",
+          //           opacity: 0.5,
+          //           pageIndex: 0,
+          //           strokeColor: "#2293FB",
+          //           strokeWidth: 5,
+          //           type: "pspdfkit/shape/rectangle",
+          //           updatedAt: "1970-01-01T00:00:00Z",
+          //           v: 1
+          //         }
+          //       ],
+          //       format: "https://pspdfkit.com/instant-json/v1"
+          //     }
+          //   }
+          // ]) // end of import annotations block
+
+        }) // end of then
       }
     },
     getFileName() { // Gets a substring of everything after the last "/", might need to change later for different URLS (FIXME)
-      return this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,)
+      if (this.store.currentIndex >= 0 && this.store.currentIndex < this.store.arrayLength) {
+        return this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,)
+      }
+      return "" // handle invalid or dummy indexes (see FIXME in beforeUnmount())
     },
     isMinIndex() { // determines whether to disable previous button (can't go further back)
       if (this.store.currentIndex <= 0) {
