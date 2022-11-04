@@ -71,6 +71,7 @@
         "http://localhost:5173/docs/4901.pdf", "http://localhost:5173/docs/hello world.pdf", "http://localhost:5173/docs/1-2-3.pdf",
         "http://localhost:5173/docs/loooooooooooooooong.pdf"
     ]
+    let myA = []
     
 </script>
 
@@ -88,10 +89,13 @@ export default {
     },
     watch: {
         currentIndexWatch(val) { // Store variable currentIndex has changed - load the document from that index in the document array
-            console.log("Sidebar.vue has index",val,"- Loading document",val+1)
-            let docName = this.dummyArray[this.store.currentIndex] // FIXME - currently uses dummy array
-            console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
-            this.store.currentFile = docName
+            if (val >= 0 && val < this.store.arrayLength) { // must be valid index
+                console.log("HERE")
+                console.log("Sidebar.vue has index",val,"- Loading document",val+1)
+                let docName = this.dummyArray[this.store.currentIndex] // FIXME - currently uses dummy array
+                console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
+                this.store.currentFile = docName
+            }
         },
     },
     methods: {
@@ -108,6 +112,8 @@ export default {
             this.sampleDocuments = this.sampleDocuments.filter((t) => t !== document)
         },
         clearSample() {
+            this.store.currentIndex = -1
+            this.store.arrayLength = 0
             this.sampleDocuments.splice(document)
         },
         async setDoc(docID){ // Sets store variables (arrayLength disables "next" button, currentIndex is tracked - changes trigger loadDoc())

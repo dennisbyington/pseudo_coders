@@ -1,5 +1,5 @@
 <template>
-    <div id="pspdf" :hidden="this.store.currentIndex < 0">
+    <div id="pspdf" :hidden="this.store.currentFile.length === 0">
         <button class="prev-button" @click="prevDoc" :disabled="isMinIndex()">
             <span class="material-symbols-outlined">
                 keyboard_arrow_left
@@ -13,7 +13,7 @@
         </button>
         <div class="pdf-container"></div>
     </div>
-    <div id="welcome" :hidden="this.store.currentIndex >= 0">
+    <div id="welcome" :hidden="this.store.currentFile.length !== 0">
       <p>Welcome to Factz.io! To get started, expand the sidebar, click "Generate Sample", and click on 
         one of the generated documents to load it.
       </p>
@@ -51,6 +51,19 @@ export default {
     },
   },
   methods: {
+    noFile() {
+      let x = true
+      if (this.store.currentFile)
+      {
+        x = true
+      }
+      else
+      {
+        x = false
+      }
+      console.log("X",x)
+      return x
+    },
     prevDoc() {
       this.store.currentIndex--
     },
@@ -129,10 +142,10 @@ export default {
       }) // end of annotation loading
     },
     getFileName() { // Gets a substring of everything after the last "/", might need to change later for different URLS (FIXME)
-      if (this.store.currentIndex >= 0 && this.store.currentIndex < this.store.arrayLength) {
+      if (this.store.currentFile) {
         return this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,)
       }
-      return "" // handle invalid or dummy indexes (see FIXME in beforeUnmount())
+      return ""
     },
     isMinIndex() { // determines whether to disable previous button (can't go further back)
       if (this.store.currentIndex <= 0) {
