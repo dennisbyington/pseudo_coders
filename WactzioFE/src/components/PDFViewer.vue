@@ -1,5 +1,5 @@
 <template>
-    <div id="pspdf">
+    <div id="pspdf" :hidden="this.store.currentIndex < 0">
         <button class="prev-button" @click="prevDoc" :disabled="isMinIndex()">
             <span class="material-symbols-outlined">
                 keyboard_arrow_left
@@ -12,6 +12,11 @@
             </span>
         </button>
         <div class="pdf-container"></div>
+    </div>
+    <div id="welcome" :hidden="this.store.currentIndex >= 0">
+      <p>Welcome to Factz.io! To get started, expand the sidebar, click "Generate Sample", and click on 
+        one of the generated documents to load it.
+      </p>
     </div>
 </template>
 
@@ -205,6 +210,10 @@ input[type="file"] {
 }
 .prev-button:disabled, .next-button:disabled {
     background-color: gray;
+}
+
+#welcome {
+  padding: 1.5rem;
 }
 
 h2 {
