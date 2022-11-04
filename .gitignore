@@ -9,3 +9,8 @@ WactzioFE/public/docs/
 WactzioFE/public/document.pdf
 WactzioFE/public/next.pdf
 WactzioFE/public/prev.pdf
+
+# active storage test/tmp docs
+active_storage_notes.txt
+test_files/
+bbox-back/storage/*
