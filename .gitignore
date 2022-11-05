@@ -15,3 +15,5 @@ active_storage_notes.txt
 test_files/
 bbox-back/storage/*
 json serializer notes
+company_files/
+seed_files_noGit/

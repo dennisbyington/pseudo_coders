@@ -3,17 +3,50 @@
 
 Company.destroy_all
 
+# *** SEED DATA WITH 100 RANDOM PDFS PER COMPANY ***
+# Source: 
 # -----------------------------------------------
-# *** SEED DATA WITH ACTIVE STORAGE FILES ***
+# create company 1
 Company.create!(name: "Seed Company 1")
-Company.find(1).pdf_files.attach(io: File.open('../test_files/test_01.pdf'), filename: 'test_01.pdf', content_type: 'application/pdf')
-Company.find(1).pdf_files.attach(io: File.open('../test_files/test_04.pdf'), filename: 'test_04.pdf', content_type: 'application/pdf')
-Company.create!(name: "Seed Company 2")
-Company.find(2).pdf_files.attach(io: File.open('../test_files/test_02.pdf'), filename: 'test_02.pdf', content_type: 'application/pdf')
-Company.find(2).pdf_files.attach(io: File.open('../test_files/test_05.pdf'), filename: 'test_05.pdf', content_type: 'application/pdf')
-Company.create!(name: "Seed Company 3")
-Company.find(3).pdf_files.attach(io: File.open('../test_files/test_03.pdf'), filename: 'test_03.pdf', content_type: 'application/pdf')
-Company.find(3).pdf_files.attach(io: File.open('../test_files/test_06.pdf'), filename: 'test_06.pdf', content_type: 'application/pdf')
-# -----------------------------------------------
 
+# open company_01_files.txt & read into array
+company_01_files = File.open("../company_files/company_01_files.txt")
+file_data = company_01_files.readlines.map(&:chomp)
+company_01_files.close
+
+# for each file, attach as active storage object
+for file in file_data
+  Company.find(1).pdf_files.attach(io: File.open("../company_files/company_01_files/#{file}"), filename: "#{file}", content_type: 'application/pdf')
+end
+
+# -----------------------------------------------
+# create company 2
+Company.create!(name: "Seed Company 2")
+
+# open company_02_files.txt & read into array
+company_02_files = File.open("../company_files/company_02_files.txt")
+file_data = company_02_files.readlines.map(&:chomp)
+company_02_files.close
+
+# for each file, attach as active storage object
+for file in file_data
+  Company.find(2).pdf_files.attach(io: File.open("../company_files/company_02_files/#{file}"), filename: "#{file}", content_type: 'application/pdf')
+end
+
+# -----------------------------------------------
+# create company 3
+Company.create!(name: "Seed Company 3")
+
+# open company_03_files.txt & read into array
+company_03_files = File.open("../company_files/company_03_files.txt")
+file_data = company_03_files.readlines.map(&:chomp)
+company_03_files.close
+
+# for each file, attach as active storage object
+for file in file_data
+  Company.find(3).pdf_files.attach(io: File.open("../company_files/company_03_files/#{file}"), filename: "#{file}", content_type: 'application/pdf')
+end
+
+# -----------------------------------------------
+# success message
 p "Created #{Company.count} companies"
