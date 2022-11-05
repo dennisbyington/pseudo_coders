@@ -71,12 +71,13 @@
 
     // FIXME - Hardcoded array of document URLs, would need to get from backend
     // instead (and probably move declaration somewhere else)
-    let dummyArray = [
-        "http://localhost:5173/docs/armadillo.pdf", "http://localhost:5173/docs/cat.pdf", "http://localhost:5173/docs/fish.pdf",
-        "http://localhost:5173/docs/word.pdf", "http://localhost:5173/docs/understanding.pdf", "http://localhost:5173/docs/a.pdf",
-        "http://localhost:5173/docs/4901.pdf", "http://localhost:5173/docs/hello world.pdf", "http://localhost:5173/docs/1-2-3.pdf",
-        "http://localhost:5173/docs/loooooooooooooooong.pdf"
-    ]
+    // let dummyArray = [
+    //     "http://localhost:5173/docs/armadillo.pdf", "http://localhost:5173/docs/cat.pdf", "http://localhost:5173/docs/fish.pdf",
+    //     "http://localhost:5173/docs/word.pdf", "http://localhost:5173/docs/understanding.pdf", "http://localhost:5173/docs/a.pdf",
+    //     "http://localhost:5173/docs/4901.pdf", "http://localhost:5173/docs/hello world.pdf", "http://localhost:5173/docs/1-2-3.pdf",
+    //     "http://localhost:5173/docs/loooooooooooooooong.pdf"
+    // ]
+    let dummyArray = []
     
 </script>
 
@@ -108,8 +109,10 @@ export default {
             this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
                 companiesResult.data.forEach((tempCompany) => {
                     this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
-                        console.log("PDF for", tempCompany.name, "is located at", companyResult.data.pdf_file_path)
-                        this.dummyArray.push(companyResult.data.pdf_file_path)
+                        companyResult.data.urls.forEach((pdf_url) => {
+                            console.log("PDF for", tempCompany.name, "is located at", pdf_url)
+                            this.dummyArray.push(pdf_url)
+                        })
                     })
                 })
             })
