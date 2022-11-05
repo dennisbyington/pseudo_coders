@@ -141,8 +141,9 @@ export default {
             this.store.arrayLength = this.dummyArray.length // FIXME - currently uses dummy array
             this.store.currentIndex = docID                 // might go from document.id (docID) to currentIndex differently later on
         },
-        formatFileName(myFile) { // removes URL portion: "http://localhost:5173/docs/SAMPLE.pdf" --> "SAMPLE.pdf"
-             return myFile.substring(myFile.lastIndexOf("/")+1,)
+        formatFileName(myFile) { 
+             let encodedName = myFile.substring(myFile.lastIndexOf("/")+1,) // removes URL portion: "http://localhost:5173/docs/SAMPLE.pdf" --> "SAMPLE.pdf"
+             return encodedName.replaceAll("%20", " ") // Removes the URL encoding "%20"
         }
     }
 }

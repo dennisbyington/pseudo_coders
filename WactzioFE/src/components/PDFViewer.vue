@@ -51,19 +51,6 @@ export default {
     },
   },
   methods: {
-    noFile() {
-      let x = true
-      if (this.store.currentFile)
-      {
-        x = true
-      }
-      else
-      {
-        x = false
-      }
-      console.log("X",x)
-      return x
-    },
     prevDoc() {
       this.store.currentIndex--
     },
@@ -141,9 +128,10 @@ export default {
 
       }) // end of annotation loading
     },
-    getFileName() { // Gets a substring of everything after the last "/", might need to change later for different URLS (FIXME)
+    getFileName() {
       if (this.store.currentFile) {
-        return this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,)
+        let encodedName = this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,) // Gets a substring of everything after the last "/"
+        return encodedName.replaceAll("%20", " ") // Removes the URL encoding "%20"
       }
       return ""
     },
