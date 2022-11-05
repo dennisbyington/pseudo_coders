@@ -64,6 +64,7 @@ Rails.application.configure do
   # config.action_cable.disable_request_forgery_protection = true
 end
 
+# default url for displaying url in rails console via pdf_file_url (helper function in model)
 Rails.application.routes.default_url_options = {
   host: 'http://localhost:3000'
 }

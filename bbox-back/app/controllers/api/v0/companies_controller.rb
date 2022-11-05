@@ -9,18 +9,25 @@ class Api::V0::CompaniesController < ApplicationController
   end
 
   # GET /companies/1
-  # *** this is working for 1 pdf only ***
-  def show
-    # ----------------------
-    # render json: @company
-    # ----------------------
+  def show   
     @company = Company.find(params[:id])
     
-    if @company.pdf_file.attached?
-      render json: @company.as_json.merge(pdf_file_path: url_for(@company.pdf_file))
+    # if company has pdf files -> attach urls to json
+    if @company.pdf_files.attached?     
+      url_array = []                    
+      for pdf in @company.pdf_files     # get array of URLs for each file
+        url_array.push(url_for(pdf))    # url_array = ['url01', 'url02', ...]
+      end
+
+      com_json = @company.as_json       # render company as json
+      com_json.store('urls', url_array) # append URLs to company json
+      render json: com_json             # render json
+    
+    # if no pdf files -> render as company only
     else
       render json: @company.as_json
     end
+
   end
 
   # POST /companies
@@ -56,7 +63,6 @@ class Api::V0::CompaniesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def company_params
-      params.require(:company).permit(:name, :pdf_file)
-      # params.require(:company).permit(:name, pdf_files: [])
+      params.require(:company).permit(:name, pdf_files: [])
     end
 end
