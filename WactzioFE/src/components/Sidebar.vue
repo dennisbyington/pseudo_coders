@@ -26,6 +26,12 @@
             </span>
             <span class="text">About</span>
         </router-link>
+        <button class="gen-sample" @click="axiosTest">
+            <span class="material-symbols-outlined">
+                info
+            </span>
+            <span class="text">Axios Test</span>
+        </button>
         <button class="gen-sample" @click="generateSample" >
             <span class="material-symbols-outlined">
                 autorenew
@@ -71,7 +77,6 @@
         "http://localhost:5173/docs/4901.pdf", "http://localhost:5173/docs/hello world.pdf", "http://localhost:5173/docs/1-2-3.pdf",
         "http://localhost:5173/docs/loooooooooooooooong.pdf"
     ]
-    let myA = []
     
 </script>
 
@@ -90,7 +95,6 @@ export default {
     watch: {
         currentIndexWatch(val) { // Store variable currentIndex has changed - load the document from that index in the document array
             if (val >= 0 && val < this.store.arrayLength) { // must be valid index
-                console.log("HERE")
                 console.log("Sidebar.vue has index",val,"- Loading document",val+1)
                 let docName = this.dummyArray[this.store.currentIndex] // FIXME - currently uses dummy array
                 console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
@@ -99,6 +103,17 @@ export default {
         },
     },
     methods: {
+        axiosTest() {
+            console.log("AXIOS TEST")
+            this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
+                companiesResult.data.forEach((tempCompany) => {
+                    this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
+                        console.log("PDF for", tempCompany.name, "is located at", companyResult.data.pdf_file_path)
+                        this.dummyArray.push(companyResult.data.pdf_file_path)
+                    })
+                })
+            })
+        },
         addSampleDocument(index, element) {
             this.sampleDocuments.push({ id: index, text: element })
         },
