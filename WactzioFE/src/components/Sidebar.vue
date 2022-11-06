@@ -38,17 +38,17 @@
             </span>
             <span class="text">Generate Sample</span>
         </button>
-        <button class="sample-doc" v-for="document in sampleDocuments" :key="document.id" @click="setDoc(document.id)">
-            <span class="material-symbols-outlined">
-                description
-            </span>
-            <span class="text">{{ document.text }}</span>
-        </button>
         <button class="clear-sample" @click="clearSample" >
             <span class="material-symbols-outlined">
                 close
             </span>
             <span class="text">Clear Sample</span>
+        </button>
+        <button class="sample-doc" v-for="document in sampleDocuments" :key="document.id" @click="setDoc(document.id)">
+            <span class="material-symbols-outlined">
+                description
+            </span>
+            <span class="text">{{ document.text }}</span>
         </button>
     </div>
   </aside>
