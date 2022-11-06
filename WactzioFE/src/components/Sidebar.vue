@@ -213,6 +213,9 @@ aside {
     }
 
     .menu {
+        max-height: 85vh;
+        overflow-y: auto;
+        overflow-x: hidden;
         margin: 0 -1rem;
         .material-symbols-outlined {
             font-size: 2rem;
