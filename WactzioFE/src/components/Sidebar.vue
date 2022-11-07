@@ -130,9 +130,11 @@ export default {
             this.sampleDocuments = this.sampleDocuments.filter((t) => t !== document)
         },
         clearSample() {
-            this.store.currentIndex = -1
-            this.store.arrayLength = 0
-            this.sampleDocuments.splice(document)
+            if (confirm("Are you sure you want to clear the current sample?")){
+                this.store.currentIndex = -1
+                this.store.arrayLength = 0
+                this.sampleDocuments.splice(document)
+            }
         },
         async setDoc(docID){ // Sets store variables (arrayLength disables "next" button, currentIndex is tracked - changes trigger loadDoc())
             if (this.$route.path !== "/") { // Need to redirect to main page, then change the index and file
