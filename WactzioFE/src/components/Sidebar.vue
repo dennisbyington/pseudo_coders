@@ -26,12 +26,6 @@
             </span>
             <span class="text">About</span>
         </router-link>
-        <button class="gen-sample" @click="axiosTest">
-            <span class="material-symbols-outlined">
-                info
-            </span>
-            <span class="text">Axios Test</span>
-        </button>
         <button class="gen-sample" @click="generateSample" >
             <span class="material-symbols-outlined">
                 autorenew
@@ -104,26 +98,22 @@ export default {
         },
     },
     methods: {
-        axiosTest() {
-            console.log("AXIOS TEST")
-            this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
-                companiesResult.data.forEach((tempCompany) => {
-                    this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
-                        companyResult.data.urls.forEach((pdf_url) => {
-                            console.log("PDF for", tempCompany.name, "is located at", pdf_url)
-                            this.dummyArray.push(pdf_url)
-                        })
-                    })
-                })
-            })
-        },
         addSampleDocument(index, element) {
             this.sampleDocuments.push({ id: index, text: element })
         },
         generateSample() {
-            this.sampleDocuments.splice(document) // removes old sample for now (FIXME)
-            this.dummyArray.forEach((element, index) => {
-                this.addSampleDocument(index, this.formatFileName(element))
+            this.sampleDocuments.splice(document) // removes old sample for now (FIXME later)
+
+            this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
+                companiesResult.data.forEach((tempCompany) => {
+                    this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
+                        companyResult.data.urls.forEach((pdf_url, index) => {
+                            console.log("PDF for", tempCompany.name, "is located at", pdf_url)
+                            this.dummyArray.push(pdf_url)          // add to array of URLS
+                            this.addSampleDocument(index, this.formatFileName(pdf_url)) // add to sidebar view
+                        })
+                    })
+                })
             })
         },
         removeSampleDocument(document) {
