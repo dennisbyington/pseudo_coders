@@ -12,15 +12,22 @@
             </span>
             <text>ACTZ.IO</text>
         </div>
-        <dropdown title="Companies" :items="companies" @click.once="axiosGetCompanies" />
+        <!--<dropdown title="Companies" :items="companies" @click.once="axiosGetCompanies" />-->
+        <dropdown :title="this.comp.currentCompanyName" :items="companies" @click.once="axiosGetCompanies" />
     </nav>
 </template>
 
-<!--<script setup-topbar>
+<script setup>
 
 
+import { ref } from "vue"
+import { computed } from "vue"
+import { useCompanyMgrStore } from "../stores/companyMgr.js"
 
-</script>-->
+const comp = useCompanyMgrStore()
+
+</script>
+
 
 <script drop>
 import axios from 'axios';
@@ -40,7 +47,7 @@ export default {
             console.log("AXIOS GET COMPANIES")
             this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
                 companiesResult.data.forEach((tempCompany) => {
-                    this.companies.push({ title: tempCompany.name })
+                    this.companies.push({ title: tempCompany.name,  id: tempCompany.id })
                 })
             })
             this.isEmpty = false;

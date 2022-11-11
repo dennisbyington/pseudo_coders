@@ -8,7 +8,7 @@
         </span>
         <transition name="fade" appear>
             <div class="sub-menu" v-if="isOpen" @mouseleave="isOpen = false">
-                <button v-for="(company, i) in items" :key="i" class="menu-button">
+                <button v-for="(company, i) in items" :key="i" class="menu-button" @click="setCompany(company)">
                     <a>{{ company.title }}</a>
                 </button>
             </div>
@@ -17,14 +17,18 @@
 </template>
 
 
-<script dropdown-script>
+<script setup>
 
 import { ref } from "vue"
 import { computed } from "vue"
 import { useCompanyMgrStore } from "../stores/companyMgr.js"
 
-//const companyStore = useCompanyMgrStore()
-//const currentIndexWatch = computed(() => comp.currentID ) // can't directly watch a store variable, so use computed
+const comp = useCompanyMgrStore()
+//const currentIDwatch = computed(() => comp.currentID ) // can't directly watch a store variable, so use computed
+
+</script>
+
+<script dropdown-script>
 
 export default {
     name: 'dropdown',
@@ -33,6 +37,13 @@ export default {
         return {
             
             isOpen: false
+        }
+    },
+    methods:
+    {
+        setCompany(company) {
+            this.comp.currentCompanyName = company.title;
+            this.comp.currentID = company.id;
         }
     }
 }

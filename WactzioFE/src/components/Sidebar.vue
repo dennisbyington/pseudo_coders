@@ -59,6 +59,7 @@
     import { ref } from "vue"
     import { computed } from "vue"
     import { useFileMgrStore } from "../stores/fileMgr"
+    import { useCompanyMgrStore } from "../stores/companyMgr.js"
   
     const is_expanded = ref(false)
 
@@ -68,6 +69,9 @@
 
     const store = useFileMgrStore()
     const currentIndexWatch = computed(() => store.currentIndex ) // can't directly watch a store variable, so use computed
+
+    const comp = useCompanyMgrStore()
+    const currentCompanyIDWatch = computed(() => comp.currentID ) // can't directly watch a store variable, so use computed
 
     // FIXME - Hardcoded array of document URLs, would need to get from backend
     // instead (and probably move declaration somewhere else)
@@ -106,16 +110,26 @@ export default {
     methods: {
         axiosTest() {
             console.log("AXIOS TEST")
-            this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
-                companiesResult.data.forEach((tempCompany) => {
-                    this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
-                        companyResult.data.urls.forEach((pdf_url) => {
-                            console.log("PDF for", tempCompany.name, "is located at", pdf_url)
-                            this.dummyArray.push(pdf_url)
+            if(this.currentCompanyIDWatch === 0) {
+                this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
+                    companiesResult.data.forEach((tempCompany) => {
+                        this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
+                            companyResult.data.urls.forEach((pdf_url) => {
+                                console.log("PDF for", tempCompany.name, "is located at", pdf_url)
+                                this.dummyArray.push(pdf_url)
+                            })
                         })
                     })
                 })
-            })
+            }
+            else {
+            this.$axios.get("http://localhost:3000/api/v0/companies/" + this.currentCompanyIDWatch).then( companyResult => {
+                companyResult.data.urls.forEach((pdf_url) => {
+                    console.log("PDF for", this.comp.currentCompanyName, "is located at", pdf_url)
+                    this.dummyArray.push(pdf_url)
+                })
+                })
+            }
         },
         addSampleDocument(index, element) {
             this.sampleDocuments.push({ id: index, text: element })
