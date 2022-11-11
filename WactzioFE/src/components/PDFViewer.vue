@@ -1,57 +1,163 @@
 <template>
-    <div id="pspdf">
-        <button class="prev-button">
-            <span class="material-symbols-outlined" @click="prevTest">
+    <div><div id="pspdf" :hidden="this.store.currentFile.length === 0">
+        <button class="prev-button" @click="prevDoc" :disabled="isMinIndex()">
+            <span class="material-symbols-outlined">
                 keyboard_arrow_left
             </span>
         </button>
         <h2>{{getFileName()}}</h2>
-        <button class="next-button">
-            <span class="material-symbols-outlined" @click="nextTest">
+        <button class="next-button" @click="nextDoc" :disabled="isMaxIndex()">
+            <span class="material-symbols-outlined">
                 keyboard_arrow_right
             </span>
         </button>
-        <PSPDFKitContainer :pdfFile="pdfFile" @loaded="handleLoaded" />
+        <div class="pdf-container"></div>
     </div>
+    <div id="welcome" :hidden="this.store.currentFile.length !== 0">
+      <p>Welcome to Factz.io! To get started, expand the sidebar, click "Generate Sample", and click on 
+        one of the generated documents to load it.
+      </p>
+    </div></div>
 </template>
 
+<script setup>
+  import PSPDFKit from "pspdfkit";
+  import { computed } from "vue";
+  import { useFileMgrStore } from "../stores/fileMgr"
+  const store = useFileMgrStore()
+  const currentFileWatch = computed(() => store.currentFile ) // can't directly watch a store variable, so use computed
+</script>
+
 <script>
-import PSPDFKitContainer from "./PSPDFKitContainer.vue";
 
 export default {
-  data() {
-    return {
-      pdfFile: this.pdfFile || "http://localhost:5173/document.pdf",
-    };
+  mounted() { // currently just for logging
+    console.log("PDFViewer has mounted.")
   },
-  /**
-   * Render the `PSPDFKitContainer` component.
-   */
-  components: {
-    PSPDFKitContainer,
+  beforeUnmount() {
+    PSPDFKit.unload(".pdf-container")
+    /** Resets store variables to dummy values - otherwise loading a document, leaving main page to about page,
+     *  and clicking on the same document will not properly load it: store variables won't change, so the watch won't
+     *  trigger (FIXME?)
+     * */ 
+    this.store.currentFile = ""
+    this.store.currentIndex = -1
+  },
+  watch: {
+    currentFileWatch(val) { // used for loading documents accessed through home page
+      if (val) {
+        this.loadDoc()
+      }
+    },
   },
   methods: {
-    handleLoaded(instance) { // Currently just for logging
-      console.log("PSPDFKit has loaded: ", instance);
+    noFile() {
+      let x = true
+      if (this.store.currentFile)
+      {
+        x = true
+      }
+      else
+      {
+        x = false
+      }
+      console.log("X",x)
+      return x
     },
+    prevDoc() {
+      this.store.currentIndex--
+    },
+    nextDoc() {
+      this.store.currentIndex++
+    },
+    loadDoc() { // Will load PDF and its annotations (currenly only loads PDF)
+      console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
+      PSPDFKit.unload(".pdf-container")
+      PSPDFKit.load({
+        document: this.store.currentFile,
+        container: ".pdf-container",
+        disableWebAssemblyStreaming: true,
+        //initialViewState: new PSPDFKit.ViewState({ readOnly: true }), // prevents editing annotations
+      }).then(async (instance) => { // start of annotation loading   
+        // create annotations
+        // [1,2].forEach(async (item) => {
+        //   const annotation = new PSPDFKit.Annotations.RectangleAnnotation({
+        //       pageIndex: 0,
+        //       boundingBox: new PSPDFKit.Geometry.Rect({
+        //         left: 100*item,
+        //         top: 100*item,
+        //         width: 50,
+        //         height: 50,
+        //       }),
+        //       fillColor: PSPDFKit.Color.BLUE,
+        //       opacity: 0.5,
+        //       isEditable: false,
+        //   })
+        //   const [createdAnnotation] = await instance.create(annotation);
+        //   console.log(createdAnnotation.id); // => '01BS964AM5Z01J9MKBK64F22BQ'
+        // })
 
-    /**
-     * When pdfFile changes, PSPDFKitContainer will automatically load
-     * the new document. Testing - will need to provide the correct
-     * document based on the button and the current document. (FIXME)
-     */
-    prevTest() {
-      this.pdfFile = "http://localhost:5173/prev.pdf"
+        // import annotations
+        // instance.applyOperations([ // start of import annotations block
+        //   {
+        //     type: "applyInstantJson",
+        //     instantJson: {
+        //       annotations: [
+        //         {
+        //           bbox: [100, 150, 200, 75],
+        //           blendMode: "normal",
+        //           createdAt: "1970-01-01T00:00:00Z",
+        //           id: "01F73GJ4RPENTCMFSCJ5CSFT5G",
+        //           name: "01F73GJ4RPENTCMFSCJ5CSFT5G",
+        //           fillColor: "#2293FB",
+        //           opacity: 0.5,
+        //           pageIndex: 0,
+        //           strokeColor: "#2293FB",
+        //           strokeWidth: 5,
+        //           type: "pspdfkit/shape/rectangle",
+        //           updatedAt: "1970-01-01T00:00:00Z",
+        //           v: 1
+        //         },
+        //         {
+        //           bbox: [200, 250, 200, 75],
+        //           blendMode: "normal",
+        //           createdAt: "1970-01-01T00:00:00Z",
+        //           id: "01F73GJ4RPENTCMFSCJ5CSFT5H",
+        //           name: "01F73GJ4RPENTCMFSCJ5CSFT5H",
+        //           fillColor: "#2293FB",
+        //           opacity: 0.5,
+        //           pageIndex: 0,
+        //           strokeColor: "#2293FB",
+        //           strokeWidth: 5,
+        //           type: "pspdfkit/shape/rectangle",
+        //           updatedAt: "1970-01-01T00:00:00Z",
+        //           v: 1
+        //         }
+        //       ],
+        //       format: "https://pspdfkit.com/instant-json/v1"
+        //     }
+        //   }
+        // ]) // end of import annotations block
+
+      }) // end of annotation loading
     },
-    nextTest() {
-      this.pdfFile = "http://localhost:5173/next.pdf"
+    getFileName() { // Gets a substring of everything after the last "/", might need to change later for different URLS (FIXME)
+      if (this.store.currentFile) {
+        return this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,)
+      }
+      return ""
     },
-    /**
-     * Currently removes the "http://localhost:5173/",
-     * will need to change later for different URLS (FIXME)
-     */
-    getFileName() {
-      return this.pdfFile.substr(22,)
+    isMinIndex() { // determines whether to disable previous button (can't go further back)
+      if (this.store.currentIndex <= 0) {
+        return true
+      }
+      return false
+    },
+    isMaxIndex() { // determines whether to disable next button (can't go further forward)
+      if (this.store.currentIndex >= this.store.arrayLength - 1) {
+        return true
+      }
+      return false
     }
 
   },
@@ -89,6 +195,9 @@ input[type="file"] {
 </style>
 
 <style lang="scss" scoped>
+.pdf-container {
+  height: 71vh;
+}
 .material-symbols-outlined {
     font-size: 2rem;
     color: var(--light);
@@ -104,6 +213,14 @@ input[type="file"] {
         background-color: var(--dark-alt);
     }
 }
+.prev-button:disabled, .next-button:disabled {
+    background-color: gray;
+}
+
+#welcome {
+  padding: 1.5rem;
+}
+
 h2 {
     display: inline-block;
     position: relative;

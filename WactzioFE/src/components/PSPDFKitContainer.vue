@@ -33,6 +33,8 @@ export default {
   watch: {
     pdfFile(val) {
       if (val) {
+        console.log("PSPDFKitContainer.vue: this.pdfFile has changed.")
+        console.log("PSPDFKitContainer.vue: Loading PDF with name",this.pdfFile)
         this.loadPSPDFKit();
       }
     },
@@ -64,6 +66,6 @@ export default {
 
 <style scoped>
 .pdf-container {
-  height: 80vh;
+  height: max-content;
 }
 </style>
