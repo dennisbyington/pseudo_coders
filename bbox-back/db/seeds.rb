@@ -4,7 +4,8 @@
 Company.destroy_all
 
 # *** SEED DATA WITH 100 RANDOM PDFS PER COMPANY ***
-# Source: 
+# Source: https://github.com/tpn/pdfs
+
 # -----------------------------------------------
 # create company 1
 Company.create!(name: "Seed Company 1")
