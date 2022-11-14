@@ -1,5 +1,5 @@
 <template>
-    <div id="pspdf" :hidden="this.store.currentFile.length === 0">
+    <div><div id="pspdf" :hidden="this.store.currentFile.length === 0">
         <button class="prev-button" @click="prevDoc" :disabled="isMinIndex()">
             <span class="material-symbols-outlined">
                 keyboard_arrow_left
@@ -17,7 +17,7 @@
       <p>Welcome to Factz.io! To get started, expand the sidebar, click "Generate Sample", and click on 
         one of the generated documents to load it.
       </p>
-    </div>
+    </div></div>
 </template>
 
 <script setup>

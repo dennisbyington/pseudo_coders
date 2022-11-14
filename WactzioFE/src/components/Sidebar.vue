@@ -53,6 +53,7 @@
     import { ref } from "vue"
     import { computed } from "vue"
     import { useFileMgrStore } from "../stores/fileMgr"
+    import { useCompanyMgrStore } from "../stores/companyMgr.js"
   
     const is_expanded = ref(false)
 
@@ -62,6 +63,9 @@
 
     const store = useFileMgrStore()
     const currentIndexWatch = computed(() => store.currentIndex ) // can't directly watch a store variable, so use computed
+
+    const comp = useCompanyMgrStore()
+    const currentCompanyIDWatch = computed(() => comp.currentID ) // can't directly watch a store variable, so use computed
 
     // FIXME - Hardcoded array of document URLs, would need to get from backend
     // instead (and probably move declaration somewhere else)
@@ -102,25 +106,40 @@ export default {
             this.sampleDocuments.push({ id: index, text: element })
         },
         generateSample() {
-            this.sampleDocuments.splice(document) // removes old sample for now (FIXME later)
+            // removes old sample for now (FIXME later?)
+            this.sampleDocuments.splice(document)
+            this.dummyArray = []
 
-            this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
-                companiesResult.data.forEach((tempCompany) => {
-                    this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
-                        companyResult.data.urls.forEach((pdf_url, index) => {
-                            console.log("PDF for", tempCompany.name, "is located at", pdf_url)
-                            this.dummyArray.push(pdf_url)          // add to array of URLS
-                            this.addSampleDocument(index, this.formatFileName(pdf_url)) // add to sidebar view
+            if(this.currentCompanyIDWatch === 0) {
+                let currIndex = 0
+                this.$axios.get("http://localhost:3000/api/v0/companies/").then( companiesResult => {
+                    companiesResult.data.forEach((tempCompany) => {
+                        this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
+                            companyResult.data.urls.forEach((pdf_url) => {
+                                console.log("PDF for", tempCompany.name, "is located at", pdf_url)
+                                this.dummyArray.push(pdf_url)
+                                this.addSampleDocument(currIndex++, this.formatFileName(pdf_url)) // add to sidebar view
+                            })
                         })
                     })
                 })
-            })
+            }
+            else {
+            this.$axios.get("http://localhost:3000/api/v0/companies/" + this.currentCompanyIDWatch).then( companyResult => {
+                companyResult.data.urls.forEach((pdf_url, index) => {
+                    console.log("PDF for", this.comp.currentCompanyName, "is located at", pdf_url)
+                    this.dummyArray.push(pdf_url)
+                    this.addSampleDocument(index, this.formatFileName(pdf_url)) // add to sidebar view
+                })
+                })
+            }
         },
         removeSampleDocument(document) {
             this.sampleDocuments = this.sampleDocuments.filter((t) => t !== document)
         },
         clearSample() {
             if (confirm("Are you sure you want to clear the current sample?")){
+                this.dummyArray = []
                 this.store.currentIndex = -1
                 this.store.arrayLength = 0
                 this.sampleDocuments.splice(document)
@@ -143,10 +162,11 @@ export default {
 
 <style lang="scss" scoped>
 aside {
+    float: left;
     display: flex;
     flex-direction: column;
     width: calc(2rem + 32px);
-    min-height: 100vh;
+    min-height: calc(100vh - var(--topbar-height));
     overflow: hidden;
     padding: 1rem;
 
@@ -189,8 +209,14 @@ aside {
 
             &:hover {
                 .material-symbols-outlined {
+                    transition: 0.2s;
                     color: var(--primary);
                     transform: translateX(0.5rem);
+                }
+            }
+            &:not(hover) {
+                .material-symbols-outlined {
+                    transition: 0.2s;
                 }
             }
         }
@@ -223,6 +249,11 @@ aside {
 
             &:hover {
                 background-color: var(--dark-alt);
+                transition: 0.2s;
+            }
+            
+            &:not(hover) {
+                transition: 0.2s;
             }
 
             .text {

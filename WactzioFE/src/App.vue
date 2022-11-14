@@ -1,11 +1,14 @@
 <template>
   <div class="app">
-    <sidebar />
-    <router-view />
+    <topbar class="top"/>
+
+    <sidebar class="nottop"/>
+    <router-view class="nottop"/>
   </div>
 </template>
 
 <script setup>
+import topbar from './components/Topbar.vue'
 import sidebar from './components/Sidebar.vue'
 </script>
 
@@ -16,7 +19,10 @@ import sidebar from './components/Sidebar.vue'
   --dark: #1e293b;
   --dark-alt: #334155;
   --light: #f1f5f9;
+  --topbar-bgcolor: #2a3036;
+  --topbar-bgcolor-alt: #464d54;
   --sidebar-width: 300px;
+  --topbar-height: 60px;
 }
 
 * {
@@ -28,6 +34,7 @@ import sidebar from './components/Sidebar.vue'
 
 body {
   background: var(--light);
+  margin-top: var(--topbar-height);
 }
 
 button {
@@ -50,4 +57,14 @@ button {
     }
   }
 }
+
+.nottop {
+  margin-top: var(--topbar-height);
+  width: 100vw;
+}
+
+.top {
+  z-index: 100;
+}
+
 </style>
