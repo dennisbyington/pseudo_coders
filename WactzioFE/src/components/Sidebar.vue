@@ -231,7 +231,7 @@ aside {
     }
 
     .menu {
-        max-height: 85vh;
+        max-height: 75vh;
         overflow-y: auto;
         overflow-x: hidden;
         margin: 0 -1rem;
