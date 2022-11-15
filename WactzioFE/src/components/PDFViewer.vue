@@ -14,7 +14,7 @@
         <div class="pdf-container"></div>
     </div>
     <div id="welcome" :hidden="this.store.currentFile.length !== 0">
-      <p>Welcome to Factz.io! To get started, expand the sidebar, click "Generate Sample", and click on 
+      <p>Welcome to Wactz.io! To get started, expand the sidebar, click "Generate Sample", and click on 
         one of the generated documents to load it.
       </p>
     </div></div>
