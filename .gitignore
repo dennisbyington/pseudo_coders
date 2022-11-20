@@ -18,3 +18,7 @@ json serializer notes
 company_files/
 seed_files_noGit/
 my_notes_noGit/
+pdftotext.txt
+
+# not sure 
+package-lock.json

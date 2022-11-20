@@ -3,7 +3,7 @@
 
 Company.destroy_all
 
-# *** SEED DATA WITH 100 RANDOM PDFS PER COMPANY ***
+# *** SEED DATA WITH 100 RANDOM PDFS PER COMPANY (except Company 4) ***
 # Source: https://github.com/tpn/pdfs
 
 # -----------------------------------------------
@@ -47,6 +47,10 @@ company_03_files.close
 for file in file_data
   Company.find(3).pdf_files.attach(io: File.open("../company_files/company_03_files/#{file}"), filename: "#{file}", content_type: 'application/pdf')
 end
+
+# -----------------------------------------------
+# create company 4
+Company.create!(name: "Seed Company 4")
 
 # -----------------------------------------------
 # success message

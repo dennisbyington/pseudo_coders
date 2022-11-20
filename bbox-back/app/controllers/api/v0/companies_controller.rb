@@ -12,22 +12,18 @@ class Api::V0::CompaniesController < ApplicationController
   def show   
     @company = Company.find(params[:id])
     
-    # if company has pdf files -> attach urls to json
-    if @company.pdf_files.attached?     
-      url_array = []                    
-      for pdf in @company.pdf_files     # get array of URLs for each file
-        url_array.push(url_for(pdf))    # url_array = ['url01', 'url02', ...]
-      end
-
-      com_json = @company.as_json       # render company as json
-      com_json.store('urls', url_array) # append URLs to company json
-      render json: com_json             # render json
-    
-    # if no pdf files -> render as company only
-    else
-      render json: @company.as_json
+    # get pdf_files urls (blank array if none attached)
+    url_array = []                    
+    for pdf in @company.pdf_files   # get array of URLs for each file
+      url_array.push(url_for(pdf))  # url_array = ['url01', 'url02', ...]
     end
 
+    # append url_array to company
+    company_hash = @company.as_json                               # convert company into hash
+    company_hash.store('number_files', @company.pdf_files.length) # append number of URLs to company_hash
+    company_hash.store('urls', url_array)                    # append url_array to company_hash
+
+    render json: company_hash
   end
 
   # POST /companies
