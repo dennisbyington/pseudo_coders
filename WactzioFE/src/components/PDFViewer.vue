@@ -11,6 +11,9 @@
                 keyboard_arrow_right
             </span>
         </button>
+        <button class="toggle-bboxes-button" @click="toggleBboxesView()">
+          <span class="text">Toggle Bounding Boxes</span>
+        </button>
         <div class="pdf-container"></div>
     </div>
     <div id="welcome" :hidden="this.store.currentFile.length !== 0">
@@ -26,6 +29,24 @@
   import { useFileMgrStore } from "../stores/fileMgr"
   const store = useFileMgrStore()
   const currentFileWatch = computed(() => store.currentFile ) // can't directly watch a store variable, so use computed
+  let currInstance = null // store instance for use later
+
+  let bboxes = // not accurate, just to make sure loading works
+  [
+    [
+      [100,100,200,200], // flow 0
+      [250,250,350,350], // flow 1
+      [400,400,500,500]  // flow 2
+    ], // page 0
+    [
+      [50,50,150,150], // flow 0
+    ], // page 1
+    [
+      [50,50,350,100],   // flow 0
+      [375,375,400,400], // flow 1
+    ]  // page 2
+  ]
+
 </script>
 
 <script>
@@ -51,6 +72,17 @@ export default {
     },
   },
   methods: {
+    async toggleBboxesView() { // for current page only (FIXME?)
+      if (this.currInstance) { // make sure instance exists before modifying it
+        let currentPage = this.currInstance.viewState.currentPageIndex
+        const annotations = await this.currInstance.getAnnotations(currentPage)
+        annotations.forEach((annotation) => {
+          if (annotation.subject === "bounding-box") {
+            this.currInstance.update(annotation.set("noView", !annotation.noView).set("noPrint", !annotation.noPrint))
+          }
+        })
+      }
+    },
     prevDoc() {
       this.store.currentIndex--
     },
@@ -64,68 +96,31 @@ export default {
         document: this.store.currentFile,
         container: ".pdf-container",
         disableWebAssemblyStreaming: true,
-        //initialViewState: new PSPDFKit.ViewState({ readOnly: true }), // prevents editing annotations
+        isEditableAnnotation: function(annotation) { // prevents editing only the bounding box annotations
+          return annotation.subject !== "bounding-box";
+        },
       }).then(async (instance) => { // start of annotation loading   
+        this.currInstance = instance // store instance for use later
         // create annotations
-        // [1,2].forEach(async (item) => {
-        //   const annotation = new PSPDFKit.Annotations.RectangleAnnotation({
-        //       pageIndex: 0,
-        //       boundingBox: new PSPDFKit.Geometry.Rect({
-        //         left: 100*item,
-        //         top: 100*item,
-        //         width: 50,
-        //         height: 50,
-        //       }),
-        //       fillColor: PSPDFKit.Color.BLUE,
-        //       opacity: 0.5,
-        //       isEditable: false,
-        //   })
-        //   const [createdAnnotation] = await instance.create(annotation);
-        //   console.log(createdAnnotation.id); // => '01BS964AM5Z01J9MKBK64F22BQ'
-        // })
-
-        // import annotations
-        // instance.applyOperations([ // start of import annotations block
-        //   {
-        //     type: "applyInstantJson",
-        //     instantJson: {
-        //       annotations: [
-        //         {
-        //           bbox: [100, 150, 200, 75],
-        //           blendMode: "normal",
-        //           createdAt: "1970-01-01T00:00:00Z",
-        //           id: "01F73GJ4RPENTCMFSCJ5CSFT5G",
-        //           name: "01F73GJ4RPENTCMFSCJ5CSFT5G",
-        //           fillColor: "#2293FB",
-        //           opacity: 0.5,
-        //           pageIndex: 0,
-        //           strokeColor: "#2293FB",
-        //           strokeWidth: 5,
-        //           type: "pspdfkit/shape/rectangle",
-        //           updatedAt: "1970-01-01T00:00:00Z",
-        //           v: 1
-        //         },
-        //         {
-        //           bbox: [200, 250, 200, 75],
-        //           blendMode: "normal",
-        //           createdAt: "1970-01-01T00:00:00Z",
-        //           id: "01F73GJ4RPENTCMFSCJ5CSFT5H",
-        //           name: "01F73GJ4RPENTCMFSCJ5CSFT5H",
-        //           fillColor: "#2293FB",
-        //           opacity: 0.5,
-        //           pageIndex: 0,
-        //           strokeColor: "#2293FB",
-        //           strokeWidth: 5,
-        //           type: "pspdfkit/shape/rectangle",
-        //           updatedAt: "1970-01-01T00:00:00Z",
-        //           v: 1
-        //         }
-        //       ],
-        //       format: "https://pspdfkit.com/instant-json/v1"
-        //     }
-        //   }
-        // ]) // end of import annotations block
-
+        for (let page = 0; page < this.bboxes.length; page++) { // iterate through pages
+          for (let flow = 0; flow < this.bboxes[page].length; flow++) { // iterate through flows
+            // this.bboxes[page][flow] = [xMin, yMin, xMax, yMax]
+            const annotation = new PSPDFKit.Annotations.RectangleAnnotation({ // rectangle annotation definition
+                pageIndex: page,
+                boundingBox: new PSPDFKit.Geometry.Rect({
+                  left: this.bboxes[page][flow][0],                                // xMin
+                  top: this.bboxes[page][flow][1],                                 // yMin
+                  width: this.bboxes[page][flow][2] - this.bboxes[page][flow][0],  // xMax - xMin
+                  height: this.bboxes[page][flow][3] - this.bboxes[page][flow][1], // yMax - yMin
+                }),
+                fillColor: PSPDFKit.Color.BLUE,
+                opacity: 0.5,
+                isEditable: false,
+                subject: "bounding-box"
+            }) // end of rectangle annotation definition
+            instance.create(annotation) // actually create the annotation
+          } // end of iterating through flows
+        } // end of iterating through pages
       }) // end of annotation loading
     },
     getFileName() {
@@ -191,7 +186,7 @@ input[type="file"] {
     color: var(--light);
     transition: 0.2 ease-out;
 }
-.prev-button, .next-button {
+.prev-button, .next-button, .toggle-bboxes-button {
     display: inline;
     align-items: center;
     padding: 0.5rem 1rem;
@@ -216,4 +211,12 @@ h2 {
     width: 250px;
     max-width: 250px;
 }
+
+.text {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 1.5rem;
+        color: var(--light);
+        display: block;
+}
 </style>
+
