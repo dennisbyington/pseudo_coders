@@ -11,9 +11,6 @@
                 keyboard_arrow_right
             </span>
         </button>
-        <button class="toggle-bboxes-button" @click="toggleBboxesView()">
-          <span class="text">Toggle Bounding Boxes</span>
-        </button>
         <div class="pdf-container"></div>
     </div>
     <div id="welcome" :hidden="this.store.currentFile.length !== 0">
@@ -29,7 +26,6 @@
   import { useFileMgrStore } from "../stores/fileMgr"
   const store = useFileMgrStore()
   const currentFileWatch = computed(() => store.currentFile ) // can't directly watch a store variable, so use computed
-  let currInstance = null // store instance for use later
 
   let bboxes = // not accurate, just to make sure loading works
   [
@@ -93,18 +89,6 @@ export default {
     },
   },
   methods: {
-    async toggleBboxesView() { // for all pages
-      if (this.currInstance) { // make sure instance exists before modifying it
-        for (let page = 0; page < this.currInstance.totalPageCount; page++) {
-          const annotations = await this.currInstance.getAnnotations(page)
-          annotations.forEach((annotation) => {
-            if (annotation.subject === "bounding-box") {
-              this.currInstance.update(annotation.set("noView", !annotation.noView).set("noPrint", !annotation.noPrint))
-            }
-          })
-        }
-      }
-    },
     prevDoc() {
       this.store.currentIndex--
     },
@@ -112,17 +96,40 @@ export default {
       this.store.currentIndex++
     },
     loadDoc() { // Will load PDF and its annotations (currenly only loads PDF)
+
+      let toggleInstance = null
+      const toggleBboxesItem = { // toolbar button to toggle bounding box visibility
+        type: "custom",
+        id: "toggle-bboxes",
+        title: "Toggle Bounding Boxes",
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="cornflowerblue" viewBox="0 0 24 24" 
+        stroke="cornflowerblue"><rect width="20" height="20" /></svg>`,
+        async onPress() {
+          if (toggleInstance) { // make sure instance exists before modifying it
+            for (let page = 0; page < toggleInstance.totalPageCount; page++) {
+              const annotations = await toggleInstance.getAnnotations(page)
+              annotations.forEach((annotation) => {
+                if (annotation.subject === "bounding-box") {
+                  toggleInstance.update(annotation.set("noView", !annotation.noView).set("noPrint", !annotation.noPrint))
+                }
+              })
+            }
+          }
+        }
+      } // end of toolbar button
+
       console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
       PSPDFKit.unload(".pdf-container")
       PSPDFKit.load({
         document: this.store.currentFile,
         container: ".pdf-container",
         disableWebAssemblyStreaming: true,
+        toolbarItems: [...PSPDFKit.defaultToolbarItems, toggleBboxesItem],
         isEditableAnnotation: function(annotation) { // prevents editing only the bounding box annotations
           return annotation.subject !== "bounding-box";
         },
       }).then(async (instance) => { // start of annotation loading   
-        this.currInstance = instance // store instance for use later
+        toggleInstance = instance // need to store for use in toggling bounding box visibility
         // create annotations
         for (let page = 0; page < this.bboxes.length; page++) { // iterate through pages
           for (let flow = 0; flow < this.bboxes[page].length; flow++) { // iterate through flows
@@ -144,7 +151,8 @@ export default {
           } // end of iterating through flows
         } // end of iterating through pages
       }) // end of annotation loading
-    },
+
+    }, // end of loadDoc()
     getFileName() {
       if (this.store.currentFile) {
         let encodedName = this.store.currentFile.substring(this.store.currentFile.lastIndexOf("/")+1,) // Gets a substring of everything after the last "/"
@@ -208,7 +216,7 @@ input[type="file"] {
     color: var(--light);
     transition: 0.2 ease-out;
 }
-.prev-button, .next-button, .toggle-bboxes-button {
+.prev-button, .next-button {
     display: inline;
     align-items: center;
     padding: 0.5rem 1rem;
@@ -239,6 +247,10 @@ h2 {
         font-size: 1.5rem;
         color: var(--light);
         display: block;
+}
+.PSPDFKit-Toolbar-Button {
+        color: red;
+        font-size: 1.5rem;
 }
 </style>
 
