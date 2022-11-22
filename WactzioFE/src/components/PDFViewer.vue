@@ -241,16 +241,5 @@ h2 {
     width: 250px;
     max-width: 250px;
 }
-
-.text {
-        font-family: "Times New Roman", Times, serif;
-        font-size: 1.5rem;
-        color: var(--light);
-        display: block;
-}
-.PSPDFKit-Toolbar-Button {
-        color: red;
-        font-size: 1.5rem;
-}
 </style>
 
