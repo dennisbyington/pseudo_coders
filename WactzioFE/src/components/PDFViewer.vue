@@ -97,15 +97,19 @@ export default {
     },
     loadDoc() { // Will load PDF and its annotations (currenly only loads PDF)
 
+      
       let toggleInstance = null
+      const bboxIconVisible = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="cornflowerblue" stroke="cornflowerblue" stroke-width="2"><rect width="20" height="20" /></svg>`
+      const bboxIconHidden = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="none" stroke="cornflowerblue" stroke-width="2"><rect width="20" height="20" /></svg>`
+
       const toggleBboxesItem = { // toolbar button to toggle bounding box visibility
         type: "custom",
         id: "toggle-bboxes",
         title: "Toggle Bounding Boxes",
-        icon: `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="cornflowerblue" viewBox="0 0 24 24" 
-        stroke="cornflowerblue"><rect width="20" height="20" /></svg>`,
+        icon: bboxIconVisible,
         async onPress() {
           if (toggleInstance) { // make sure instance exists before modifying it
+            // show/hide the annotations as needed
             for (let page = 0; page < toggleInstance.totalPageCount; page++) {
               const annotations = await toggleInstance.getAnnotations(page)
               annotations.forEach((annotation) => {
@@ -114,6 +118,15 @@ export default {
                 }
               })
             }
+            // change the button's appearance to match the current visibility of the annotations
+            toggleInstance.setToolbarItems(toolbarItems =>
+              toolbarItems.map(tempItem => {
+                if (tempItem.id === "toggle-bboxes") {
+                  tempItem.icon = (tempItem.icon === bboxIconVisible) ? bboxIconHidden : bboxIconVisible
+                }
+                return tempItem;
+              })
+            )
           }
         }
       } // end of toolbar button
