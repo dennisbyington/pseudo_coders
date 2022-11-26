@@ -117,37 +117,51 @@ export default {
     nextDoc() {
       this.store.currentIndex++
     },
-    createAnnotationsForPage(page) { // create annotations for the specified page (if not yet created)
-      if (this.annotationsLoaded[page] === true) { return } // if annotations already loaded, do nothing
-      for (let flow = 0; flow < this.bboxes[page].length; flow++) { // iterate through flows
-        // this.bboxes[page][flow] = [xMin, yMin, xMax, yMax]
-        const annotation = new PSPDFKit.Annotations.RectangleAnnotation({ // rectangle annotation definition
-            pageIndex: page,
-            boundingBox: new PSPDFKit.Geometry.Rect({
-              left: this.bboxes[page][flow][0],                                // xMin
-              top: this.bboxes[page][flow][1],                                 // yMin
-              width: this.bboxes[page][flow][2] - this.bboxes[page][flow][0],  // xMax - xMin
-              height: this.bboxes[page][flow][3] - this.bboxes[page][flow][1], // yMax - yMin
-            }),
-            fillColor: PSPDFKit.Color.BLUE,
-            opacity: 0.5,
-            isEditable: false,
-            subject: "bounding-box"
-        }) // end of rectangle annotation definition
-        this.storedInstance.create(annotation) // actually create the annotation
-      } // end of iterating through flows
-      this.annotationsLoaded[page] = true // mark page so annotations not loaded again
-    },
-    async setAnnotationVisForPage(page) { // set visibility of bboxes on page
-      let visible = this.bboxesItem.boxesVisible // determine whether to show/hide
-      if (this.annotationsVisible[page] === visible) { return } // if annotations already shown/hidden, do nothing
-      const annotations = await this.storedInstance.getAnnotations(page)
-      annotations.forEach((annotation) => {
-        if (annotation.subject === "bounding-box") {
-          this.storedInstance.update(annotation.set("noView", !visible).set("noPrint", !visible))
+    createAnnotationsForPage(currPage) { // create annotations for the specified page (if not yet created)
+      let minPage = (currPage - 2 >= 0) ? currPage - 2 : 0
+      let maxPage = (currPage + 2 <= this.storedInstance.totalPageCount - 1) ? currPage + 2 : this.storedInstance.totalPageCount - 1
+
+      for (let page = minPage; page <= maxPage; page++) { // load pages adjacent to current page to reduce pop-in
+        if (this.annotationsLoaded[page] === false) { // if annotations not already loaded
+          console.log("LOADING FOR PAGE",page)
+          for (let flow = 0; flow < this.bboxes[page].length; flow++) { // iterate through flows
+            // this.bboxes[page][flow] = [xMin, yMin, xMax, yMax]
+            const annotation = new PSPDFKit.Annotations.RectangleAnnotation({ // rectangle annotation definition
+                pageIndex: page,
+                boundingBox: new PSPDFKit.Geometry.Rect({
+                  left: this.bboxes[page][flow][0],                                // xMin
+                  top: this.bboxes[page][flow][1],                                 // yMin
+                  width: this.bboxes[page][flow][2] - this.bboxes[page][flow][0],  // xMax - xMin
+                  height: this.bboxes[page][flow][3] - this.bboxes[page][flow][1], // yMax - yMin
+                }),
+                fillColor: PSPDFKit.Color.BLUE,
+                opacity: 0.5,
+                isEditable: false,
+                subject: "bounding-box"
+            }) // end of rectangle annotation definition
+            this.storedInstance.create(annotation) // actually create the annotation
+          } // end of iterating through flows
+          this.annotationsLoaded[page] = true // mark page so annotations not loaded again
         }
-      })
-      this.annotationsVisible[page] = visible // mark page so annotations not changed unnecessarily
+      }
+    },
+    async setAnnotationVisForPage(currPage) { // set visibility of bboxes on page
+      let minPage = (currPage - 2 >= 0) ? currPage - 2 : 0
+      let maxPage = (currPage + 2 <= this.storedInstance.totalPageCount - 1) ? currPage + 2 : this.storedInstance.totalPageCount - 1
+      let visible = this.bboxesItem.boxesVisible // determine whether to show/hide
+
+      for (let page = minPage; page <= maxPage; page++) { // load pages adjacent to current page to reduce pop-in
+        if (this.annotationsVisible[page] !== visible) { // if annotations not already shown/hidden
+          console.log("SETTING FOR PAGE",page)
+          const annotations = await this.storedInstance.getAnnotations(page)
+          annotations.forEach((annotation) => {
+            if (annotation.subject === "bounding-box") {
+              this.storedInstance.update(annotation.set("noView", !visible).set("noPrint", !visible))
+            }
+          })
+          this.annotationsVisible[page] = visible // mark page so annotations not changed unnecessarily
+        } 
+      }
     },
     loadDoc() { // Will load PDF and create annotations
       PSPDFKit.load({
