@@ -88,7 +88,8 @@ export default {
     currentFileWatch(val) { // used for loading documents accessed through home page
       if (val) {
         PSPDFKit.unload(".pdf-container") // Hide old PDF
-        this.axiosBboxThenLoad(3) // try to get bboxes from backend then load document, 3 attempts max
+        this.bboxes = [] // Reset bbox array
+        this.axiosBboxThenLoad(3) // Try to get bboxes from backend then load document, 3 attempts max
       }
     },
   },
