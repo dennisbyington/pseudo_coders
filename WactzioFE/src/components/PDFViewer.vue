@@ -32,29 +32,28 @@
 
   const bboxIconVisible = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="cornflowerblue" stroke="cornflowerblue" stroke-width="2"><rect width="20" height="20" /></svg>`
   const bboxIconHidden = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="none" stroke="cornflowerblue" stroke-width="2"><rect width="20" height="20" /></svg>`
-  let toggleBboxesItem = { // toolbar button to toggle bounding box visibility
+  let bboxesItem = { // toolbar button to toggle bounding box visibility
     type: "custom",
     id: "toggle-bboxes",
     title: "Toggle Bounding Boxes",
     icon: bboxIconVisible,
     buttonInstance: null,
+    boxesVisible: true,
+    visFunction() {
+      console.log("Visibility function not yet set.")
+    },
     setInstance(newInstance) {
       this.buttonInstance = newInstance
     },
+    setVisFunction(newFunction) {
+      this.visFunction = newFunction
+    },
     async onPress() {
-      let tempInstance = toggleBboxesItem.buttonInstance
-      if (tempInstance) { // make sure instance exists before modifying it
-        // show/hide the annotations as needed
-        for (let page = 0; page < tempInstance.totalPageCount; page++) {
-          const annotations = await tempInstance.getAnnotations(page)
-          annotations.forEach((annotation) => {
-            if (annotation.subject === "bounding-box") {
-              tempInstance.update(annotation.set("noView", !annotation.noView).set("noPrint", !annotation.noPrint))
-            }
-          })
-        }
+      if (bboxesItem.buttonInstance) { // make sure instance exists before modifying it
+        bboxesItem.boxesVisible = !bboxesItem.boxesVisible                           // keeps track of whether to show/hide annotations
+        bboxesItem.visFunction(bboxesItem.buttonInstance.viewState.currentPageIndex, bboxesItem.boxesVisible) // toggle visibility for current page
         // change the button's appearance to match the current visibility of the annotations
-        tempInstance.setToolbarItems(toolbarItems =>
+        bboxesItem.buttonInstance.setToolbarItems(toolbarItems =>
           toolbarItems.map(tempItem => {
             if (tempItem.id === "toggle-bboxes") {
               tempItem.icon = (tempItem.icon === bboxIconVisible) ? bboxIconHidden : bboxIconVisible
@@ -139,21 +138,38 @@ export default {
       } // end of iterating through flows
       this.annotationsLoaded[page] = true // mark page so annotations not loaded again
     },
+    async setAnnotationVisForPage(page) { // set visibility of bboxes on page
+      let visible = this.bboxesItem.boxesVisible // determine whether to show/hide
+      if (this.annotationsVisible[page] === visible) { return } // if annotations already shown/hidden, do nothing
+      const annotations = await this.storedInstance.getAnnotations(page)
+      annotations.forEach((annotation) => {
+        if (annotation.subject === "bounding-box") {
+          this.storedInstance.update(annotation.set("noView", !visible).set("noPrint", !visible))
+        }
+      })
+      this.annotationsVisible[page] = visible // mark page so annotations not changed unnecessarily
+    },
     loadDoc() { // Will load PDF and create annotations
       PSPDFKit.load({
         document: this.store.currentFile,
         container: ".pdf-container",
         disableWebAssemblyStreaming: true,
-        toolbarItems: [...PSPDFKit.defaultToolbarItems, this.toggleBboxesItem],
+        toolbarItems: [...PSPDFKit.defaultToolbarItems, this.bboxesItem],
         isEditableAnnotation: function(annotation) { // prevents editing only the bounding box annotations
           return annotation.subject !== "bounding-box";
         },
       }).then(async (instance) => { // annotation loading
         this.storedInstance = instance                         // need to store for use in toggling bounding box visibility, loading annotations
-        this.toggleBboxesItem.setInstance(this.storedInstance) // needed for toggle to work properly
+        this.bboxesItem.setInstance(this.storedInstance) // needed for toggle to work properly
+        this.bboxesItem.setVisFunction(this.setAnnotationVisForPage)
 
         this.annotationsLoaded = Array(this.storedInstance.totalPageCount).fill(false) // keep track of which pages have annotations loaded
-        this.storedInstance.addEventListener("viewState.currentPageIndex.change", this.createAnnotationsForPage) // load the annotations for a new page when it is loaded
+        this.annotationsVisible = Array(this.storedInstance.totalPageCount).fill(true) // keep track of which pages have annotations visible
+
+        // when page changes, create annotations / change annotation visibility if needed
+        this.storedInstance.addEventListener("viewState.currentPageIndex.change", this.createAnnotationsForPage)
+        this.storedInstance.addEventListener("viewState.currentPageIndex.change", this.setAnnotationVisForPage)
+
         this.createAnnotationsForPage(0)         // create the annotations for the initial page
       })
     },
