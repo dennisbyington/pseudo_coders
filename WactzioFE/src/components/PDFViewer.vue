@@ -95,8 +95,8 @@ export default {
     },
   },
   methods: {
-    axiosBboxThenLoad(max_retries) {
-      if (max_retries <= 0) { // No more attempts, display error
+    axiosBboxThenLoad(retries) {
+      if (retries <= 0) { // No more attempts, display error
         alert("Error: Unable to load bounding boxes for this document.")
       }
       else {
@@ -106,7 +106,7 @@ export default {
               this.loadDoc()              // Load the PDF
             }
             else { // Failure, try loading again
-              this.axiosBbox(max_retries - 1)
+              this.axiosBboxThenLoad(retries - 1)
             }
         })
       }
@@ -123,7 +123,6 @@ export default {
 
       for (let page = minPage; page <= maxPage; page++) { // load pages adjacent to current page to reduce pop-in
         if (this.annotationsLoaded[page] === false) { // if annotations not already loaded
-          console.log("LOADING FOR PAGE",page)
           for (let flow = 0; flow < this.bboxes[page].length; flow++) { // iterate through flows
             // this.bboxes[page][flow] = [xMin, yMin, xMax, yMax]
             const annotation = new PSPDFKit.Annotations.RectangleAnnotation({ // rectangle annotation definition
@@ -152,7 +151,6 @@ export default {
 
       for (let page = minPage; page <= maxPage; page++) { // load pages adjacent to current page to reduce pop-in
         if (this.annotationsVisible[page] !== visible) { // if annotations not already shown/hidden
-          console.log("SETTING FOR PAGE",page)
           const annotations = await this.storedInstance.getAnnotations(page)
           annotations.forEach((annotation) => {
             if (annotation.subject === "bounding-box") {
