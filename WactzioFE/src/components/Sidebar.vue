@@ -92,11 +92,9 @@ export default {
     watch: {
         currentIndexWatch(val) { // Store variable currentIndex has changed - load the document from that index in the document array
             if (val >= 0 && val < this.store.arrayLength) { // must be valid index
-                console.log("Sidebar.vue has index",val,"- Loading document",val+1)
                 let docName = this.dummyArray[this.store.currentIndex][2] // [0] company id, [1] doc ID, [2] URL
                 this.store.backendCompanyID = this.dummyArray[this.store.currentIndex][0]
                 this.store.backendDocID = this.dummyArray[this.store.currentIndex][1]
-                console.log("Sidebar.vue: Setting this.store.currentFile to", docName)
                 this.store.currentFile = docName
             }
         },
@@ -115,7 +113,6 @@ export default {
                     companiesResult.data.forEach((tempCompany) => {
                         this.$axios.get("http://localhost:3000/api/v0/companies/" + tempCompany.id).then( companyResult => {
                             companyResult.data.urls.forEach((pdf_result) => {
-                                console.log("PDF",tempCompany.id,"-",pdf_result[0],"is located at",pdf_result[1])
                                 this.dummyArray.push([tempCompany.id, pdf_result[0], pdf_result[1]])
                                 this.addSampleDocument(currIndex++, this.formatFileName(pdf_result[1])) // add to sidebar view
                             })
@@ -126,7 +123,6 @@ export default {
             else {
                 this.$axios.get("http://localhost:3000/api/v0/companies/" + this.currentCompanyIDWatch).then( companyResult => {
                     companyResult.data.urls.forEach((pdf_result, index) => { // pdf_result[0] is doc ID, pdf_result[1] is the URL
-                        console.log("PDF",this.currentCompanyIDWatch,"-",pdf_result[0],"is located at",pdf_result[1])
                         this.dummyArray.push([this.currentCompanyIDWatch, pdf_result[0], pdf_result[1]])
                         this.addSampleDocument(index, this.formatFileName(pdf_result[1])) // add to sidebar view
                     })
@@ -137,19 +133,17 @@ export default {
             // removes old sample for now (FIXME later?)
             this.clearSample(false) // don't ask for confirmation
 
-            alert("Need random sample from backend") // FIXME - need backend to accept random sample request (see format below)
-            // if(this.currentCompanyIDWatch === 0) {
-            //     alert("Please select a company first.") // currently random sample pulls from only one company (FIXME?) 
-            // }
-            // else {
-            //     this.$axios.get("http://localhost:3000/api/v0/companies/random/" + this.currentCompanyIDWatch).then( companyResult => {
-            //         companyResult.data.urls.forEach((pdf_result, index) => { // pdf_result[0] is doc ID, pdf_result[1] is the URL
-            //             console.log("PDF",this.currentCompanyIDWatch,"-",pdf_result[0],"is located at",pdf_result[1])
-            //             this.dummyArray.push([this.currentCompanyIDWatch, pdf_result[0], pdf_result[1]])
-            //             this.addSampleDocument(index, this.formatFileName(pdf_result[1])) // add to sidebar view
-            //         })
-            //     })
-            // }
+            if(this.currentCompanyIDWatch === 0) {
+                alert("Please select a company first.") // currently random sample pulls from only one company (FIXME?) 
+            }
+            else {
+                this.$axios.get("http://localhost:3000/api/v0/companies/random/" + this.currentCompanyIDWatch).then( companyResult => {
+                    companyResult.data.urls.forEach((pdf_result, index) => { // pdf_result[0] is doc ID, pdf_result[1] is the URL
+                        this.dummyArray.push([this.currentCompanyIDWatch, pdf_result[0], pdf_result[1]])
+                        this.addSampleDocument(index, this.formatFileName(pdf_result[1])) // add to sidebar view
+                    })
+                })
+            }
         },
         removeSampleDocument(document) {
             this.sampleDocuments = this.sampleDocuments.filter((t) => t !== document)
@@ -241,7 +235,7 @@ aside {
 
     .text, h3 {
         font-family: "Times New Roman", Times, serif;
-        font-size: 2rem;
+        font-size: 1rem;
         color: var(--light);
         opacity: 0;
         transition: 0.3s ease-out;

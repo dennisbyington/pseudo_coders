@@ -53,6 +53,24 @@ class Api::V0::CompaniesController < ApplicationController
     render json: bboxes
   end
 
+  # GET /companies/random/company_id
+  def random
+    @company = Company.find(params[:company_id])
+    
+    url_array = []
+    pdf_sample = @company.pdf_files.sample(50)      # get random sample of 50 PDFs
+    for pdf in pdf_sample                           # make array of blob_ids & URLs for each file
+      url_array.push([pdf.blob_id, url_for(pdf)])   # url_array = [[blob_id, 'url01'], [blob_id, 'url02'], ...]
+    end
+
+    # append url_array to company
+    company_hash = @company.as_json                      # convert company into hash
+    company_hash.store('number_files', url_array.length) # append number of URLs (in sample) to company_hash
+    company_hash.store('urls', url_array)                # append url_array to company_hash
+
+    render json: company_hash
+  end
+
   # GET /companies
   def index
     @companies = Company.all

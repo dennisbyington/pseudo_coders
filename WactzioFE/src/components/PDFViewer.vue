@@ -40,7 +40,7 @@
     buttonInstance: null,
     boxesVisible: true,
     visFunction() {
-      console.log("Visibility function not yet set.")
+      // console.log("Visibility function not yet set.")
     },
     setInstance(newInstance) {
       this.buttonInstance = newInstance
@@ -70,7 +70,7 @@
 
 export default {
   mounted() { // currently just for logging
-    console.log("PDFViewer has mounted.")
+    // console.log("PDFViewer has mounted.")
   },
   beforeUnmount() {
     PSPDFKit.unload(".pdf-container")
