@@ -21,11 +21,49 @@
 </template>
 
 <script setup>
-  import PSPDFKit from "pspdfkit";
+  import PSPDFKit, { ViewState } from "pspdfkit";
   import { computed } from "vue";
   import { useFileMgrStore } from "../stores/fileMgr"
   const store = useFileMgrStore()
   const currentFileWatch = computed(() => store.currentFile ) // can't directly watch a store variable, so use computed
+  let bboxes = []
+  let annotationsLoaded = [] // keep track of which pages have annotations loaded
+  let storedInstance = null  // need to store for use in toggling bounding box visibility, loading annotations
+
+  const bboxIconVisible = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="cornflowerblue" stroke="cornflowerblue" stroke-width="2"><rect width="20" height="20" /></svg>`
+  const bboxIconHidden = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" fill="none" stroke="cornflowerblue" stroke-width="2"><rect width="20" height="20" /></svg>`
+  let bboxesItem = { // toolbar button to toggle bounding box visibility
+    type: "custom",
+    id: "toggle-bboxes",
+    title: "Toggle Bounding Boxes",
+    icon: bboxIconVisible,
+    buttonInstance: null,
+    boxesVisible: true,
+    visFunction() {
+      console.log("Visibility function not yet set.")
+    },
+    setInstance(newInstance) {
+      this.buttonInstance = newInstance
+    },
+    setVisFunction(newFunction) {
+      this.visFunction = newFunction
+    },
+    async onPress() {
+      if (bboxesItem.buttonInstance) { // make sure instance exists before modifying it
+        bboxesItem.boxesVisible = !bboxesItem.boxesVisible                           // keeps track of whether to show/hide annotations
+        bboxesItem.visFunction(bboxesItem.buttonInstance.viewState.currentPageIndex, bboxesItem.boxesVisible) // toggle visibility for current page
+        // change the button's appearance to match the current visibility of the annotations
+        bboxesItem.buttonInstance.setToolbarItems(toolbarItems =>
+          toolbarItems.map(tempItem => {
+            if (tempItem.id === "toggle-bboxes") {
+              tempItem.icon = (tempItem.icon === bboxIconVisible) ? bboxIconHidden : bboxIconVisible
+            }
+            return tempItem;
+          })
+        )
+      }
+    }
+  } // end of toolbar button
 </script>
 
 <script>
@@ -42,91 +80,110 @@ export default {
      * */ 
     this.store.currentFile = ""
     this.store.currentIndex = -1
+
+    // Setting these to default just in case (FIXME?)
+    this.store.backendCompanyID = -1
+    this.store.backendDocID = -1
   },
   watch: {
     currentFileWatch(val) { // used for loading documents accessed through home page
       if (val) {
-        this.loadDoc()
+        PSPDFKit.unload(".pdf-container") // Hide old PDF
+        this.bboxes = [] // Reset bbox array
+        this.axiosBboxThenLoad(3) // Try to get bboxes from backend then load document, 3 attempts max
       }
     },
   },
   methods: {
+    axiosBboxThenLoad(retries) {
+      if (retries <= 0) { // No more attempts, display error
+        alert("Error: Unable to load bounding boxes for this document.")
+      }
+      else {
+        this.$axios.get("http://localhost:3000/api/v0/companies/bbox/" + this.store.backendCompanyID + "/" + this.store.backendDocID).then( bboxResult => {
+            this.bboxes = bboxResult.data // Store the bbox data
+            if (this.bboxes.length > 0) { // Successfully got bbox data
+              this.loadDoc()              // Load the PDF
+            }
+            else { // Failure, try loading again
+              this.axiosBboxThenLoad(retries - 1)
+            }
+        })
+      }
+    },
     prevDoc() {
       this.store.currentIndex--
     },
     nextDoc() {
       this.store.currentIndex++
     },
-    loadDoc() { // Will load PDF and its annotations (currenly only loads PDF)
-      console.log("PDFViewer.vue: Loading PDF with name",this.store.currentFile)
-      PSPDFKit.unload(".pdf-container")
+    createAnnotationsForPage(currPage) { // create annotations for the specified page (if not yet created)
+      let minPage = (currPage - 2 >= 0) ? currPage - 2 : 0
+      let maxPage = (currPage + 2 <= this.storedInstance.totalPageCount - 1) ? currPage + 2 : this.storedInstance.totalPageCount - 1
+
+      for (let page = minPage; page <= maxPage; page++) { // load pages adjacent to current page to reduce pop-in
+        if (this.annotationsLoaded[page] === false) { // if annotations not already loaded
+          for (let flow = 0; flow < this.bboxes[page].length; flow++) { // iterate through flows
+            // this.bboxes[page][flow] = [xMin, yMin, xMax, yMax]
+            const annotation = new PSPDFKit.Annotations.RectangleAnnotation({ // rectangle annotation definition
+                pageIndex: page,
+                boundingBox: new PSPDFKit.Geometry.Rect({
+                  left: this.bboxes[page][flow][0],                                // xMin
+                  top: this.bboxes[page][flow][1],                                 // yMin
+                  width: this.bboxes[page][flow][2] - this.bboxes[page][flow][0],  // xMax - xMin
+                  height: this.bboxes[page][flow][3] - this.bboxes[page][flow][1], // yMax - yMin
+                }),
+                fillColor: PSPDFKit.Color.BLUE,
+                opacity: 0.5,
+                isEditable: false,
+                subject: "bounding-box"
+            }) // end of rectangle annotation definition
+            this.storedInstance.create(annotation) // actually create the annotation
+          } // end of iterating through flows
+          this.annotationsLoaded[page] = true // mark page so annotations not loaded again
+        }
+      }
+    },
+    async setAnnotationVisForPage(currPage) { // set visibility of bboxes on page
+      let minPage = (currPage - 2 >= 0) ? currPage - 2 : 0
+      let maxPage = (currPage + 2 <= this.storedInstance.totalPageCount - 1) ? currPage + 2 : this.storedInstance.totalPageCount - 1
+      let visible = this.bboxesItem.boxesVisible // determine whether to show/hide
+
+      for (let page = minPage; page <= maxPage; page++) { // load pages adjacent to current page to reduce pop-in
+        if (this.annotationsVisible[page] !== visible) { // if annotations not already shown/hidden
+          const annotations = await this.storedInstance.getAnnotations(page)
+          annotations.forEach((annotation) => {
+            if (annotation.subject === "bounding-box") {
+              this.storedInstance.update(annotation.set("noView", !visible).set("noPrint", !visible))
+            }
+          })
+          this.annotationsVisible[page] = visible // mark page so annotations not changed unnecessarily
+        } 
+      }
+    },
+    loadDoc() { // Will load PDF and create annotations
       PSPDFKit.load({
         document: this.store.currentFile,
         container: ".pdf-container",
         disableWebAssemblyStreaming: true,
-        //initialViewState: new PSPDFKit.ViewState({ readOnly: true }), // prevents editing annotations
-      }).then(async (instance) => { // start of annotation loading   
-        // create annotations
-        // [1,2].forEach(async (item) => {
-        //   const annotation = new PSPDFKit.Annotations.RectangleAnnotation({
-        //       pageIndex: 0,
-        //       boundingBox: new PSPDFKit.Geometry.Rect({
-        //         left: 100*item,
-        //         top: 100*item,
-        //         width: 50,
-        //         height: 50,
-        //       }),
-        //       fillColor: PSPDFKit.Color.BLUE,
-        //       opacity: 0.5,
-        //       isEditable: false,
-        //   })
-        //   const [createdAnnotation] = await instance.create(annotation);
-        //   console.log(createdAnnotation.id); // => '01BS964AM5Z01J9MKBK64F22BQ'
-        // })
+        toolbarItems: [...PSPDFKit.defaultToolbarItems, this.bboxesItem],
+        isEditableAnnotation: function(annotation) { // prevents editing only the bounding box annotations
+          return annotation.subject !== "bounding-box";
+        },
+      }).then(async (instance) => { // annotation loading
+        this.storedInstance = instance                         // need to store for use in toggling bounding box visibility, loading annotations
+        this.bboxesItem.setInstance(this.storedInstance) // needed for toggle to work properly
+        this.bboxesItem.setVisFunction(this.setAnnotationVisForPage)
 
-        // import annotations
-        // instance.applyOperations([ // start of import annotations block
-        //   {
-        //     type: "applyInstantJson",
-        //     instantJson: {
-        //       annotations: [
-        //         {
-        //           bbox: [100, 150, 200, 75],
-        //           blendMode: "normal",
-        //           createdAt: "1970-01-01T00:00:00Z",
-        //           id: "01F73GJ4RPENTCMFSCJ5CSFT5G",
-        //           name: "01F73GJ4RPENTCMFSCJ5CSFT5G",
-        //           fillColor: "#2293FB",
-        //           opacity: 0.5,
-        //           pageIndex: 0,
-        //           strokeColor: "#2293FB",
-        //           strokeWidth: 5,
-        //           type: "pspdfkit/shape/rectangle",
-        //           updatedAt: "1970-01-01T00:00:00Z",
-        //           v: 1
-        //         },
-        //         {
-        //           bbox: [200, 250, 200, 75],
-        //           blendMode: "normal",
-        //           createdAt: "1970-01-01T00:00:00Z",
-        //           id: "01F73GJ4RPENTCMFSCJ5CSFT5H",
-        //           name: "01F73GJ4RPENTCMFSCJ5CSFT5H",
-        //           fillColor: "#2293FB",
-        //           opacity: 0.5,
-        //           pageIndex: 0,
-        //           strokeColor: "#2293FB",
-        //           strokeWidth: 5,
-        //           type: "pspdfkit/shape/rectangle",
-        //           updatedAt: "1970-01-01T00:00:00Z",
-        //           v: 1
-        //         }
-        //       ],
-        //       format: "https://pspdfkit.com/instant-json/v1"
-        //     }
-        //   }
-        // ]) // end of import annotations block
+        this.annotationsLoaded = Array(this.storedInstance.totalPageCount).fill(false) // keep track of which pages have annotations loaded
+        this.annotationsVisible = Array(this.storedInstance.totalPageCount).fill(true) // keep track of which pages have annotations visible
 
-      }) // end of annotation loading
+        // when page changes, create annotations / change annotation visibility if needed
+        this.storedInstance.addEventListener("viewState.currentPageIndex.change", this.createAnnotationsForPage)
+        this.storedInstance.addEventListener("viewState.currentPageIndex.change", this.setAnnotationVisForPage)
+
+        this.createAnnotationsForPage(0)         // create the annotations for the initial page
+      })
     },
     getFileName() {
       if (this.store.currentFile) {
@@ -217,3 +274,4 @@ h2 {
     max-width: 250px;
 }
 </style>
+
