@@ -286,10 +286,16 @@ class Api::V0::CompaniesController < ApplicationController
 
       # loop through each page->flow->block
       puts "****** building bboxes ************************************"
+      # get start time for speed measurement
+      # source: https://stackoverflow.com/questions/2289381/how-to-time-an-operation-in-milliseconds-in-ruby/45483168#45483168
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      pages = 0  # to calculate time/page
+      
       # for each page
       doc.css("page").each_with_index do |page, page_num|
         bboxes.push([])   # append a new "page" entry to bboxes
-
+        pages = pages + 1
+        
         # for each flow
         page.css("flow").each_with_index do |flow, flow_num|
           bboxes[page_num].push([])   # append a new "flow" entry to bboxes[current page]
@@ -321,6 +327,17 @@ class Api::V0::CompaniesController < ApplicationController
           ymaxs.clear()
         end # for each flow
       end # for each page
+      
+      # get stop time for speed measurement
+      stop_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)  
+      # calculate time and send to console
+      time_taken = stop_time - start_time
+      print('total time_taken (ms): ')
+      puts(time_taken * 1000)
+      print('total pages: ')
+      puts(pages)
+      print('time_taken per page (ms): ')
+      puts(time_taken * 1000 / pages)
 
       return bboxes
     end  # get_bboxes()
