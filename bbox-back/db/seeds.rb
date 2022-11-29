@@ -8,7 +8,7 @@ Company.destroy_all
 
 # -----------------------------------------------
 # create company 1
-Company.create!(name: "Seed Company 1")
+Company.create!(name: "Company 1")
 
 # open company_01_files.txt & read into array
 company_01_files = File.open("../company_files/company_01_files.txt")
@@ -22,7 +22,7 @@ end
 
 # -----------------------------------------------
 # create company 2
-Company.create!(name: "Seed Company 2")
+Company.create!(name: "Company 2")
 
 # open company_02_files.txt & read into array
 company_02_files = File.open("../company_files/company_02_files.txt")
@@ -36,7 +36,7 @@ end
 
 # -----------------------------------------------
 # create company 3
-Company.create!(name: "Seed Company 3")
+Company.create!(name: "Company 3")
 
 # open company_03_files.txt & read into array
 company_03_files = File.open("../company_files/company_03_files.txt")
@@ -50,7 +50,17 @@ end
 
 # -----------------------------------------------
 # create company 4
-Company.create!(name: "Seed Company 4")
+Company.create!(name: "Company 4")
+
+# open company_04_files.txt & read into array
+company_04_files = File.open("../company_files/company_04_files.txt")
+file_data = company_04_files.readlines.map(&:chomp)
+company_04_files.close
+
+# for each file, attach as active storage object
+for file in file_data
+  Company.find(4).pdf_files.attach(io: File.open("../company_files/company_04_files/#{file}"), filename: "#{file}", content_type: 'application/pdf')
+end
 
 # -----------------------------------------------
 # success message
