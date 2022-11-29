@@ -240,6 +240,11 @@ class Api::V0::CompaniesController < ApplicationController
       begin 
         pdftotext_attempts ||= 1  # keep track of pdftotext attempts
         
+        # get start time for speed measurement
+        # source: https://stackoverflow.com/questions/2289381/how-to-time-an-operation-in-milliseconds-in-ruby/45483168#45483168
+        start_time ||= Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        pages ||= 0  # to calculate time/page
+
         # system call to pdftotext to get xml data => bbox-back/temp.xml
         puts "****** calling pdftotext **********************************"
         system("pdftotext -bbox-layout temp.pdf temp.xml")
@@ -270,7 +275,6 @@ class Api::V0::CompaniesController < ApplicationController
       # /NEW: pdftotext system call (w/ error catch/log)
       # =================================================================================
 
-      
       # open output file, get xml data, close and delete temp files
       puts "****** calling nokogiri ***********************************"
       f = File.open("temp.xml")
@@ -278,19 +282,12 @@ class Api::V0::CompaniesController < ApplicationController
       f.close
       File.delete("temp.xml") if File.exist?("temp.xml")
       File.delete("temp.pdf") if File.exist?("temp.pdf")
-
       
       # temp arrays to hold values for each block within a flow
       xmins, ymins, xmaxs, ymaxs = [], [], [], []
 
-
       # loop through each page->flow->block
-      puts "****** building bboxes ************************************"
-      # get start time for speed measurement
-      # source: https://stackoverflow.com/questions/2289381/how-to-time-an-operation-in-milliseconds-in-ruby/45483168#45483168
-      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      pages = 0  # to calculate time/page
-      
+      puts "****** building bboxes ************************************"    
       # for each page
       doc.css("page").each_with_index do |page, page_num|
         bboxes.push([])   # append a new "page" entry to bboxes
