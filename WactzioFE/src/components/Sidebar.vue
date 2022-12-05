@@ -180,6 +180,7 @@ aside {
     min-height: calc(100vh - var(--topbar-height));
     overflow: hidden;
     padding: 1rem;
+    padding-bottom: 0px;
 
     background-color: var(--dark);
     color: var(--light);
@@ -242,7 +243,8 @@ aside {
     }
 
     .menu {
-        max-height: 75vh;
+        //background-color: var(--light);
+        max-height: 100vh;
         overflow-y: auto;
         overflow-x: hidden;
         margin: 0 -1rem;
