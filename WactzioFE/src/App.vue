@@ -47,6 +47,7 @@ button {
 
 .app {
   display: flex;
+  max-height: 100vh;
 
   main {
     flex: 1 1 0;
